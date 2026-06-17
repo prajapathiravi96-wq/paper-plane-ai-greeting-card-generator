@@ -2,8 +2,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import GreetingCard from '../models/GreetingCard.js';
 import Analytics from '../models/Analytics.js';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
-// Simple in-memory fallback database for cards and analytics in case MongoDB is offline
+// In-memory fallback database for cards and analytics in case MongoDB is offline
 export const memoryCards = [
   {
     _id: "666e1234567890abcdef0001",
@@ -17,7 +18,9 @@ export const memoryCards = [
     content: "Happy Birthday Amit! You're not getting older, you're just becoming a classic. Like a fine wine, or a vintage car, or a piece of cheese left in the fridge too long. Hope your day is filled with lots of cake and zero calculations of your actual age. Cheers, Ravi!",
     caption: "Older? Yes. Wiser? Debatable. Happy Birthday, Amit! 🎂",
     giftTag: "To Amit, From Ravi. Wishing you cake and chaos!",
-    template: "modern",
+    template: "birthday",
+    userId: "666e1234567890abcdef0009", // Regular user
+    isFavorite: false,
     createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) // 3 days ago
   },
   {
@@ -32,7 +35,9 @@ export const memoryCards = [
     content: "Happy Anniversary, Priya! Every day spent with you feels like a beautiful dream come true. You are my laughter, my anchor, and my best friend. Thank you for sharing your life, your love, and your heart with me. Here's to forever, Rohan.",
     caption: "Years fly by when you're with your favorite human. Happy Anniversary! ❤️",
     giftTag: "To Priya, From Rohan. Forever and always.",
-    template: "romantic",
+    template: "anniversary",
+    userId: "666e1234567890abcdef0009", // Regular user
+    isFavorite: true,
     createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 day ago
   },
   {
@@ -48,6 +53,8 @@ export const memoryCards = [
     caption: "Big shoutout to our Tech Team for their hard work! 🚀",
     giftTag: "Thank you for driving success. - CEO",
     template: "corporate",
+    userId: "666e1234567890abcdef0000", // Admin user
+    isFavorite: false,
     createdAt: new Date()
   }
 ];
@@ -127,13 +134,24 @@ export const generateCard = async (req, res, next) => {
       throw new Error('Please fill all required fields: occasion, tone, recipient, sender');
     }
 
+    // Extract user ID optionally from Authorization header
+    let userId = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'paper_plane_secret_jwt_key');
+        userId = decoded.id;
+      } catch (err) {
+        console.log('Generating card as guest (invalid token)');
+      }
+    }
+
     let cardData;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (apiKey && apiKey !== 'your_gemini_api_key_here') {
       try {
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Using recommended gemini-1.5-flash model
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const systemPrompt = `You are an expert copywriter and greeting card designer. 
@@ -156,7 +174,6 @@ You must output a raw, valid JSON object containing exactly the following keys, 
         const result = await model.generateContent(systemPrompt);
         const text = result.response.text();
         
-        // Clean markdown backticks if Gemini returned them
         const cleanedText = text
           .replace(/```json/gi, '')
           .replace(/```/g, '')
@@ -168,11 +185,9 @@ You must output a raw, valid JSON object containing exactly the following keys, 
         cardData = generateMockCard(occasion, tone, recipient, sender, length, language);
       }
     } else {
-      console.log('No GEMINI_API_KEY found, using local template engine.');
       cardData = generateMockCard(occasion, tone, recipient, sender, length, language);
     }
 
-    // Save to DB if connected, otherwise save in memory
     const finalCard = {
       occasion,
       tone,
@@ -185,6 +200,8 @@ You must output a raw, valid JSON object containing exactly the following keys, 
       caption: cardData.caption,
       giftTag: cardData.giftTag,
       template: template || 'minimalist',
+      userId,
+      isFavorite: false
     };
 
     if (isDbConnected()) {
@@ -228,13 +245,18 @@ You must output a raw, valid JSON object containing exactly the following keys, 
   }
 };
 
-// Get All Cards with Filters and Search
+// Get All Cards with Filters, Search, and User constraints
 export const getCards = async (req, res, next) => {
   try {
     const { search, occasion, tone } = req.query;
     
     if (isDbConnected()) {
       let query = {};
+
+      // Regular users only see their own cards. Admins see everything.
+      if (req.user && req.user.role !== 'admin') {
+        query.userId = req.user._id;
+      }
 
       if (search) {
         query.$or = [
@@ -262,13 +284,19 @@ export const getCards = async (req, res, next) => {
       // Memory query fallback
       let filteredCards = [...memoryCards];
 
+      // Regular users only see their own cards in memory
+      if (req.user && req.user.role !== 'admin') {
+        const userIdStr = req.user._id.toString();
+        filteredCards = filteredCards.filter((c) => c.userId === userIdStr);
+      }
+
       if (search) {
         const searchLower = search.toLowerCase();
         filteredCards = filteredCards.filter(
           (c) =>
-            c.recipient.toLowerCase().includes(searchLower) ||
-            c.sender.toLowerCase().includes(searchLower) ||
-            c.title.toLowerCase().includes(searchLower)
+              c.recipient.toLowerCase().includes(searchLower) ||
+              c.sender.toLowerCase().includes(searchLower) ||
+              c.title.toLowerCase().includes(searchLower)
         );
       }
 
@@ -303,6 +331,13 @@ export const getCardById = async (req, res, next) => {
         res.status(404);
         throw new Error('Greeting card not found');
       }
+
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to access this card');
+      }
+
       return res.status(200).json({
         success: true,
         data: card,
@@ -313,6 +348,13 @@ export const getCardById = async (req, res, next) => {
         res.status(404);
         throw new Error('Greeting card not found');
       }
+
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to access this card');
+      }
+
       return res.status(200).json({
         success: true,
         data: card,
@@ -329,13 +371,19 @@ export const deleteCard = async (req, res, next) => {
     const { id } = req.params;
 
     if (isDbConnected()) {
-      const card = await GreetingCard.findByIdAndDelete(id);
+      const card = await GreetingCard.findById(id);
       if (!card) {
         res.status(404);
         throw new Error('Greeting card not found');
       }
-      
-      // Delete corresponding analytics records
+
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to delete this card');
+      }
+
+      await GreetingCard.findByIdAndDelete(id);
       await Analytics.deleteMany({ cardId: id });
 
       return res.status(200).json({
@@ -348,10 +396,68 @@ export const deleteCard = async (req, res, next) => {
         res.status(404);
         throw new Error('Greeting card not found');
       }
+
+      const card = memoryCards[cardIndex];
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to delete this card');
+      }
+
       memoryCards.splice(cardIndex, 1);
       return res.status(200).json({
         success: true,
         message: 'Greeting card deleted successfully from memory',
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Toggle card favorite status
+export const toggleFavoriteCard = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (isDbConnected()) {
+      const card = await GreetingCard.findById(id);
+      if (!card) {
+        res.status(404);
+        throw new Error('Greeting card not found');
+      }
+
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to update this card');
+      }
+
+      card.isFavorite = !card.isFavorite;
+      await card.save();
+
+      return res.status(200).json({
+        success: true,
+        data: card
+      });
+    } else {
+      const card = memoryCards.find((c) => c._id === id);
+      if (!card) {
+        res.status(404);
+        throw new Error('Greeting card not found');
+      }
+
+      // Check ownership
+      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error('Not authorized to update this card');
+      }
+
+      card.isFavorite = !card.isFavorite;
+      return res.status(200).json({
+        success: true,
+        data: card,
+        note: "Updated in temporary memory storage"
       });
     }
   } catch (error) {

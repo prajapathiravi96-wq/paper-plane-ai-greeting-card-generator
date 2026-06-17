@@ -56,6 +56,15 @@ const greetingCardSchema = new mongoose.Schema(
       type: String,
       default: 'minimalist',
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

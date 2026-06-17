@@ -3,9 +3,11 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import connectDB from './config/db.js';
+import authRoutes from './routes/authRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -34,6 +36,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api', cardRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 

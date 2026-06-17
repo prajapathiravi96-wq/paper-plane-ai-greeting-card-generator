@@ -1,136 +1,133 @@
 import React from 'react';
 
-const CardTemplate = ({ title, content, recipient, sender, occasion, tone, template = 'minimalist' }) => {
+const CardTemplate = ({ title, content, recipient, sender, occasion, tone, template = 'birthday' }) => {
   
-  // Style mappings based on template selected
+  // High-end template configurations matching requested themes
   const templates = {
-    minimalist: {
-      cardClass: "bg-white border-2 border-amber-100 text-slate-800 relative shadow-lg hover:shadow-xl",
-      accentBg: "bg-amber-50 text-amber-800 border border-amber-100/50",
-      headerFont: "font-serif text-3xl font-normal tracking-wide text-amber-900 border-b border-amber-100 pb-4 text-center mt-4",
+    birthday: {
+      cardClass: "bg-gradient-to-tr from-[#FFF9E6] via-[#FFF0F3] to-[#F3EBFF] text-purple-950 border-2 border-purple-200/50 shadow-xl hover:shadow-2xl hover:border-purple-300",
+      accentBg: "bg-purple-100 text-purple-800 border border-purple-250/30",
+      headerFont: "font-serif text-3xl font-extrabold tracking-wide text-purple-900 border-b border-purple-200/40 pb-4 text-center mt-4",
       bodyClass: "font-serif italic leading-relaxed text-slate-700 text-lg px-2",
-      footerBorder: "border-t border-amber-100 pt-4 text-amber-850 font-serif",
-      quoteColor: "text-amber-200/25",
+      footerBorder: "border-t border-purple-200/40 pt-4 text-purple-900 font-serif",
+      quoteColor: "text-purple-300/20",
       decorations: (
         <>
-          <div className="absolute inset-4 border border-amber-100/60 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-amber-500/80 text-[10px] tracking-widest font-mono">
-            ELEGANCE ∙ PAPER PLANE
-          </div>
+          {/* Balloons and Confetti Decals */}
+          <div className="absolute inset-4 border border-purple-200/30 pointer-events-none rounded-2xl"></div>
+          <div className="absolute top-6 left-6 text-2xl select-none animate-bounce">🎈</div>
+          <div className="absolute top-6 right-6 text-2xl select-none animate-pulse">🎂</div>
+          <div className="absolute bottom-16 right-6 text-xl select-none opacity-20">✨</div>
+          <div className="absolute bottom-16 left-6 text-xl select-none opacity-20">🎉</div>
         </>
       )
     },
-    modern: {
-      cardClass: "bg-slate-950 text-white border border-slate-900 overflow-hidden relative shadow-2xl",
-      accentBg: "bg-gradient-to-r from-brand-600 to-accent-indigo text-white shadow-sm",
-      headerFont: "font-sans text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-400 to-indigo-300 bg-clip-text text-transparent pb-3 text-center mt-4",
-      bodyClass: "font-sans leading-relaxed text-slate-300 text-base md:text-lg px-2",
-      footerBorder: "border-t border-slate-900 pt-4 text-slate-400 font-sans text-sm",
-      quoteColor: "text-purple-900/30",
+    anniversary: {
+      cardClass: "bg-gradient-to-tr from-[#FFF0F3] via-[#FFE4E6] to-[#FFF5F5] text-rose-950 border-2 border-rose-200 shadow-xl hover:shadow-2xl hover:border-rose-300",
+      accentBg: "bg-rose-100 text-rose-800 border border-rose-200/40",
+      headerFont: "font-serif text-3xl font-bold tracking-wide text-rose-800 border-b border-rose-200/40 pb-4 text-center mt-4",
+      bodyClass: "font-serif italic leading-loose text-rose-900/90 text-lg px-2",
+      footerBorder: "border-t border-rose-250/30 pt-4 text-rose-850 font-serif",
+      quoteColor: "text-rose-300/20",
       decorations: (
         <>
-          <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl"></div>
-          <div className="absolute inset-4 border border-slate-800/60 pointer-events-none rounded-2xl"></div>
-        </>
-      )
-    },
-    cheerful: {
-      cardClass: "bg-gradient-to-tr from-amber-50 to-orange-50 text-amber-950 border-2 border-orange-200 relative shadow-lg",
-      accentBg: "bg-orange-100 text-orange-850 border border-orange-200/50",
-      headerFont: "font-sans text-3xl font-extrabold text-orange-600 pb-3 text-center mt-4",
-      bodyClass: "font-sans leading-relaxed text-amber-900 text-lg px-2",
-      footerBorder: "border-t border-orange-200 pt-4 text-orange-850 font-sans",
-      quoteColor: "text-orange-200/35",
-      decorations: (
-        <>
-          <div className="absolute inset-4 border-2 border-dashed border-orange-200/50 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-2xl">🎉✨</div>
-        </>
-      )
-    },
-    romantic: {
-      cardClass: "bg-rose-50 text-rose-950 border-2 border-rose-250 relative shadow-lg",
-      accentBg: "bg-rose-100 text-rose-800 border border-rose-200/50",
-      headerFont: "font-serif text-3xl font-bold text-rose-700 pb-3 text-center mt-4",
-      bodyClass: "font-serif italic leading-loose text-rose-900 text-lg px-2",
-      footerBorder: "border-t border-rose-250 pt-4 text-rose-800 font-serif",
-      quoteColor: "text-rose-200/30",
-      decorations: (
-        <>
-          <div className="absolute inset-4 border border-rose-200/60 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-xl">❤️</div>
-          <div className="absolute bottom-6 left-6 text-xl opacity-20">🌹</div>
+          {/* Hearts and Roses Decals */}
+          <div className="absolute inset-4 border-2 border-double border-rose-200/40 pointer-events-none rounded-2xl"></div>
+          <div className="absolute top-6 right-6 text-2xl select-none">💖</div>
+          <div className="absolute top-6 left-6 text-xl select-none opacity-40">🌹</div>
+          <div className="absolute bottom-16 right-6 text-xl select-none opacity-20">🌹</div>
+          <div className="absolute bottom-16 left-6 text-2xl select-none opacity-30">❤️</div>
         </>
       )
     },
     corporate: {
-      cardClass: "bg-white border-t-8 border-t-indigo-600 border-x border-b border-slate-200 text-slate-800 relative shadow-lg",
-      accentBg: "bg-indigo-50 text-indigo-800 border border-indigo-100/50",
-      headerFont: "font-sans text-2xl font-bold tracking-tight text-slate-900 pb-3 text-center mt-4",
+      cardClass: "bg-gradient-to-br from-[#F0F7FF] via-[#E0EFFF] to-[#F8FAFC] text-blue-950 border border-blue-200/60 shadow-xl hover:shadow-2xl hover:border-blue-300",
+      accentBg: "bg-blue-100 text-blue-800 border border-blue-200/40",
+      headerFont: "font-sans text-2xl font-bold tracking-tight text-blue-900 border-b border-blue-200/45 pb-4 text-center mt-4",
       bodyClass: "font-sans leading-relaxed text-slate-650 text-base px-2",
-      footerBorder: "border-t border-slate-200 pt-4 text-slate-500 font-sans text-xs",
-      quoteColor: "text-indigo-100/40",
+      footerBorder: "border-t border-blue-200/40 pt-4 text-blue-900/70 font-sans text-xs",
+      quoteColor: "text-blue-300/15",
       decorations: (
         <>
-          <div className="absolute inset-4 border border-slate-200/60 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-indigo-400 font-bold text-[10px] tracking-wider">
+          {/* Sleek Blue Geometrics */}
+          <div className="absolute inset-4 border border-blue-200/35 pointer-events-none rounded-2xl"></div>
+          <div className="absolute top-6 right-6 text-blue-500 font-mono text-[9px] font-bold tracking-widest bg-blue-50 border border-blue-200/30 px-2 py-0.5 rounded-md">
             PROFESSIONAL
           </div>
+          <div className="absolute -top-12 -left-12 w-28 h-28 bg-blue-500/5 rounded-full blur-xl pointer-events-none"></div>
+          <div className="absolute -bottom-12 -right-12 w-28 h-28 bg-indigo-500/5 rounded-full blur-xl pointer-events-none"></div>
         </>
       )
     },
-    vintage: {
-      cardClass: "bg-gradient-to-br from-[#FCFBF7] to-[#F5EBD3] border-4 border-double border-[#8B5A2B]/40 text-[#4A2E16] relative shadow-lg overflow-hidden",
-      accentBg: "bg-[#8B5A2B]/10 text-[#5C3E21] border border-[#8B5A2B]/30",
-      headerFont: "font-serif text-3xl font-bold tracking-wide text-[#5C3E21] border-b border-[#8B5A2B]/20 pb-4 text-center mt-4",
-      bodyClass: "font-serif italic leading-relaxed text-[#5C3E21] text-lg px-2",
-      footerBorder: "border-t border-[#8B5A2B]/20 pt-4 text-[#8B5A2B] font-serif",
-      quoteColor: "text-[#8B5A2B]/10",
+    festival: {
+      cardClass: "bg-gradient-to-tr from-[#2A104E] via-[#1C0838] to-[#0D021D] text-[#FFE4A3] border border-purple-900/60 shadow-[0_15px_40px_rgba(124,58,237,0.18)] hover:shadow-[0_20px_50px_rgba(124,58,237,0.3)]",
+      accentBg: "bg-purple-500/20 text-[#FFE4A3] border border-purple-500/30",
+      headerFont: "font-sans text-3xl font-extrabold tracking-wide bg-gradient-to-r from-amber-200 via-orange-350 to-amber-200 bg-clip-text text-transparent border-b border-purple-900/30 pb-4 text-center mt-4",
+      bodyClass: "font-serif leading-relaxed text-purple-100 text-lg px-2 font-light",
+      footerBorder: "border-t border-purple-900/40 pt-4 text-amber-200/70 font-sans text-xs",
+      quoteColor: "text-[#FFE4A3]/10",
       decorations: (
         <>
-          <div className="absolute inset-4 border border-[#8B5A2B]/20 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-[#8B5A2B]/80 text-[10px] tracking-widest font-mono font-bold">
-            RETRO CLASSIC
-          </div>
-        </>
-      )
-    },
-    galaxy: {
-      cardClass: "bg-gradient-to-br from-[#0C0C1E] via-[#170E2B] to-[#250D3D] border border-purple-900/60 text-white relative shadow-[0_0_30px_rgba(168,85,247,0.2)] overflow-hidden",
-      accentBg: "bg-purple-500/20 text-purple-300 border border-purple-500/30 shadow-sm",
-      headerFont: "font-sans text-3xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent pb-3 text-center mt-4",
-      bodyClass: "font-sans leading-relaxed text-purple-100 text-base md:text-lg px-2 font-light",
-      footerBorder: "border-t border-purple-900/50 pt-4 text-purple-400 font-mono text-xs",
-      quoteColor: "text-purple-500/15",
-      decorations: (
-        <>
-          <div className="absolute -top-20 -left-20 w-40 h-40 bg-cyan-500/10 rounded-full blur-2xl"></div>
-          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-pink-500/10 rounded-full blur-2xl"></div>
+          {/* Lit diyas and festival patterns */}
           <div className="absolute inset-4 border border-purple-500/10 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-cyan-400 text-xs tracking-wider font-semibold">✨ COSMIC GALAXY</div>
+          <div className="absolute top-6 left-6 text-2xl select-none animate-pulse">🪔</div>
+          <div className="absolute top-6 right-6 text-2xl select-none animate-pulse">✨</div>
+          <div className="absolute bottom-16 right-6 text-xl select-none opacity-20">🪔</div>
+          <div className="absolute bottom-16 left-6 text-xl select-none opacity-20">✨</div>
         </>
       )
     },
-    watercolor: {
-      cardClass: "bg-gradient-to-tr from-[#F0F9FF] via-[#FDF4FF] to-[#FFF1F2] border-2 border-pink-100 text-slate-800 relative shadow-lg overflow-hidden",
-      accentBg: "bg-pink-100/60 text-pink-700 border border-pink-200/50",
-      headerFont: "font-sans text-3xl font-bold tracking-tight bg-gradient-to-r from-pink-600 to-indigo-600 bg-clip-text text-transparent pb-3 text-center mt-4",
-      bodyClass: "font-sans leading-relaxed text-slate-700 text-lg px-2 font-medium",
-      footerBorder: "border-t border-pink-200/60 pt-4 text-slate-600 font-sans",
-      quoteColor: "text-pink-300/20",
+    friendship: {
+      cardClass: "bg-gradient-to-tr from-[#FFFEE5] via-[#EBF7EE] to-[#EBF0FC] text-green-950 border-2 border-dashed border-green-200 shadow-xl hover:shadow-2xl hover:border-green-300",
+      accentBg: "bg-green-100 text-green-800 border border-green-200/40",
+      headerFont: "font-sans text-3xl font-black text-green-800 border-b border-green-200/40 pb-4 text-center mt-4",
+      bodyClass: "font-sans leading-relaxed text-slate-700 text-base px-2 font-medium",
+      footerBorder: "border-t border-green-200/40 pt-4 text-green-900 font-sans",
+      quoteColor: "text-green-300/25",
       decorations: (
         <>
-          <div className="absolute top-0 right-0 w-36 h-36 bg-pink-300/15 rounded-full blur-xl pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-36 h-36 bg-indigo-300/15 rounded-full blur-xl pointer-events-none"></div>
-          <div className="absolute inset-4 border border-pink-200/40 pointer-events-none rounded-2xl"></div>
-          <div className="absolute top-6 right-6 text-[10px] tracking-wider text-pink-500 font-bold uppercase">ARTISTIC</div>
+          {/* Friendly illustrations and smilies */}
+          <div className="absolute top-6 right-6 text-2xl select-none animate-bounce">😊</div>
+          <div className="absolute top-6 left-6 text-2xl select-none">⭐</div>
+          <div className="absolute bottom-16 right-6 text-xl select-none opacity-20">✌️</div>
+          <div className="absolute bottom-16 left-6 text-xl select-none opacity-20">💖</div>
+        </>
+      )
+    },
+    wedding: {
+      cardClass: "bg-gradient-to-tr from-[#FFFDFC] via-[#FDF5E6] to-[#FFF9E6] text-amber-950 border-2 border-double border-amber-300 shadow-[0_20px_50px_rgba(218,165,32,0.12)] hover:shadow-[0_25px_60px_rgba(218,165,32,0.22)]",
+      accentBg: "bg-[#FDF5E6] text-amber-800 border border-amber-300/40",
+      headerFont: "font-serif text-3xl font-normal tracking-widest text-amber-800 border-b border-amber-250/30 pb-4 text-center mt-4",
+      bodyClass: "font-serif italic leading-loose text-amber-900/90 text-lg px-2 font-light",
+      footerBorder: "border-t border-amber-250/30 pt-4 text-amber-800 font-serif",
+      quoteColor: "text-amber-300/15",
+      decorations: (
+        <>
+          {/* Luxury gold filigrees and rings */}
+          <div className="absolute inset-4 border border-amber-300/30 pointer-events-none rounded-2xl"></div>
+          <div className="absolute top-6 right-6 text-2xl select-none">💍</div>
+          <div className="absolute top-6 left-6 text-2xl select-none opacity-40">🔔</div>
+          <div className="absolute bottom-16 right-6 text-xl select-none opacity-20">⚜️</div>
+          <div className="absolute bottom-16 left-6 text-xl select-none opacity-20">⚜️</div>
         </>
       )
     }
   };
 
-  const selected = templates[template] || templates.minimalist;
+  // Fallback map for legacy styles
+  const fallbackMap = {
+    minimalist: 'birthday',
+    modern: 'birthday',
+    cheerful: 'friendship',
+    romantic: 'anniversary',
+    corporate: 'corporate',
+    vintage: 'wedding',
+    galaxy: 'festival',
+    watercolor: 'friendship'
+  };
+
+  const selectedKey = templates[template] ? template : (fallbackMap[template] || 'birthday');
+  const selected = templates[selectedKey];
 
   return (
     <div 
@@ -139,7 +136,7 @@ const CardTemplate = ({ title, content, recipient, sender, occasion, tone, templ
     >
       {selected.decorations}
 
-      {/* Card fold paper crease effect down the exact center */}
+      {/* Card fold crease line in exact center */}
       <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-black/[0.04] to-transparent pointer-events-none z-15"></div>
 
       {/* Card Header */}
@@ -154,7 +151,7 @@ const CardTemplate = ({ title, content, recipient, sender, occasion, tone, templ
         </h2>
       </div>
 
-      {/* Card Body with Elegant Quote Marks */}
+      {/* Card Body with Quote Marks */}
       <div className="flex-1 flex flex-col justify-center my-4 relative z-10 px-4">
         <span className={`absolute -top-8 left-2 text-7xl font-serif select-none pointer-events-none ${selected.quoteColor}`}>“</span>
         
