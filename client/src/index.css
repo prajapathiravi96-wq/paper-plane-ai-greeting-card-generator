@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#F8F4FF] text-[#0F172A] min-h-screen overflow-x-hidden;
+    @apply bg-[#F8F4FF] dark:bg-[#0B051D] text-[#0F172A] dark:text-[#F8F4FF] min-h-screen overflow-x-hidden transition-colors duration-300;
   }
 }
 
