@@ -17,7 +17,9 @@ import {
   FiLinkedin,
   FiMessageCircle,
   FiLink,
-  FiActivity
+  FiActivity,
+  FiSliders,
+  FiX
 } from 'react-icons/fi';
 
 const Generator = () => {
@@ -472,7 +474,7 @@ const Generator = () => {
                     {/* Character count */}
                     <div className="flex justify-between items-center text-xs border-b border-purple-100/50 dark:border-purple-900/20 pb-2">
                       <span className="text-slate-500 dark:text-purple-300/60 font-medium">Body Character Count</span>
-                      <span className="font-bold font-mono text-purple-700 dark:text-purple-300">{generatedCard.content.length} chars</span>
+                      <span className="font-bold font-mono text-purple-700 dark:text-purple-300">{(generatedCard.content || '').length} chars</span>
                     </div>
 
                     {/* Progress bars */}
