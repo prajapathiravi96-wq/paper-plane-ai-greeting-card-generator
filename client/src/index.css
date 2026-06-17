@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F8F4FF] text-[#0F172A] min-h-screen overflow-x-hidden;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F4FF;
+}
+::-webkit-scrollbar-thumb {
+  background: #C084FC;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A855F7;
+}
+
+/* Premium CSS Utilities */
+@layer utilities {
+  .glass-premium {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+  
+  .glass-nav {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(124, 58, 237, 0.15);
+  }
+
+  .glow-purple {
+    box-shadow: 0 10px 40px rgba(124, 58, 237, 0.15);
+  }
+
+  .glow-purple-lg {
+    box-shadow: 0 20px 50px rgba(124, 58, 237, 0.25);
+  }
+
+  .glow-button {
+    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
+  }
+  
+  .glow-button-hover:hover {
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.45);
+  }
+}
+
+/* Floating Animations */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-15px) rotate(2deg);
+  }
+}
+
+@keyframes float-gentle-reverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(15px) rotate(-2deg);
+  }
+}
+
+.animate-float-1 {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.animate-float-2 {
+  animation: float-gentle-reverse 8s ease-in-out infinite;
+}
+
+.animate-float-3 {
+  animation: float-gentle 7s ease-in-out infinite 1.5s;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
