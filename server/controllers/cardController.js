@@ -253,9 +253,13 @@ export const getCards = async (req, res, next) => {
     if (isDbConnected()) {
       let query = {};
 
-      // Regular users only see their own cards. Admins see everything.
-      if (req.user && req.user.role !== 'admin') {
-        query.userId = req.user._id;
+      // Regular users only see their own cards. Admins see everything. Guests see guest cards.
+      if (req.user) {
+        if (req.user.role !== 'admin') {
+          query.userId = req.user._id;
+        }
+      } else {
+        query.userId = null;
       }
 
       if (search) {
@@ -284,10 +288,14 @@ export const getCards = async (req, res, next) => {
       // Memory query fallback
       let filteredCards = [...memoryCards];
 
-      // Regular users only see their own cards in memory
-      if (req.user && req.user.role !== 'admin') {
-        const userIdStr = req.user._id.toString();
-        filteredCards = filteredCards.filter((c) => c.userId === userIdStr);
+      // Regular users only see their own cards in memory. Guests see guest cards.
+      if (req.user) {
+        if (req.user.role !== 'admin') {
+          const userIdStr = req.user._id.toString();
+          filteredCards = filteredCards.filter((c) => c.userId === userIdStr);
+        }
+      } else {
+        filteredCards = filteredCards.filter((c) => !c.userId);
       }
 
       if (search) {
@@ -333,9 +341,11 @@ export const getCardById = async (req, res, next) => {
       }
 
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to access this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to access this card');
+        }
       }
 
       return res.status(200).json({
@@ -350,9 +360,11 @@ export const getCardById = async (req, res, next) => {
       }
 
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to access this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to access this card');
+        }
       }
 
       return res.status(200).json({
@@ -378,9 +390,11 @@ export const deleteCard = async (req, res, next) => {
       }
 
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to delete this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to delete this card');
+        }
       }
 
       await GreetingCard.findByIdAndDelete(id);
@@ -399,9 +413,11 @@ export const deleteCard = async (req, res, next) => {
 
       const card = memoryCards[cardIndex];
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to delete this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to delete this card');
+        }
       }
 
       memoryCards.splice(cardIndex, 1);
@@ -428,9 +444,11 @@ export const toggleFavoriteCard = async (req, res, next) => {
       }
 
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to update this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to update this card');
+        }
       }
 
       card.isFavorite = !card.isFavorite;
@@ -448,9 +466,11 @@ export const toggleFavoriteCard = async (req, res, next) => {
       }
 
       // Check ownership
-      if (req.user.role !== 'admin' && card.userId && card.userId.toString() !== req.user._id.toString()) {
-        res.status(403);
-        throw new Error('Not authorized to update this card');
+      if (card.userId) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+          res.status(403);
+          throw new Error('Not authorized to update this card');
+        }
       }
 
       card.isFavorite = !card.isFavorite;

@@ -6,6 +6,32 @@ const isDbConnected = () => {
   return mongoose.connection.readyState === 1;
 };
 
+// Optional protect middleware (doesn't reject if no token is present)
+export const optionalProtect = async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'paper_plane_secret_jwt_key');
+
+      if (isDbConnected()) {
+        req.user = await User.findById(decoded.id).select('-password');
+      } else {
+        const { memoryUsers } = await import('../controllers/authController.js');
+        req.user = memoryUsers.find((u) => u._id === decoded.id);
+      }
+    } catch (error) {
+      console.log('Optional token validation failed:', error.message);
+    }
+  }
+
+  next();
+};
+
 // In-memory users shared export from authController (will import dynamically or define access)
 // To prevent circular imports, we check both DB and an in-memory user list
 export const protect = async (req, res, next) => {
