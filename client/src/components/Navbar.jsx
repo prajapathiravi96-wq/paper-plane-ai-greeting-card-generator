@@ -45,14 +45,14 @@ const Navbar = () => {
       <nav className="w-full max-w-7xl mx-auto px-6 py-3 rounded-[20px] bg-white/70 dark:bg-[#120B2E]/70 backdrop-blur-[15px] border border-purple-500/15 dark:border-purple-800/15 shadow-[0_10px_40px_rgba(124,58,237,0.12)] flex items-center justify-between pointer-events-auto relative transition-colors duration-300">
       
       {/* Brand logo */}
-      <Link to="/" className="flex items-center gap-2 font-black text-2xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] bg-clip-text text-transparent">
-        <motion.span 
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-          className="text-3xl"
-        >
-          ✈️
-        </motion.span>
+      <Link to="/" className="flex items-center gap-2.5 font-black text-2xl bg-gradient-to-r from-[#7C3AED] to-[#A855F7] bg-clip-text text-transparent">
+        <motion.img 
+          src="/logo.png" 
+          alt="Paper Plane Logo" 
+          className="w-8 h-8 object-contain rounded-lg shadow-sm"
+          animate={{ y: [0, -2, 2, 0] }}
+          transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+        />
         <span>Paper Plane</span>
       </Link>
 
