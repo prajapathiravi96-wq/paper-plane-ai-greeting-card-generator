@@ -22,8 +22,6 @@ import {
   FiSliders,
   FiX,
   FiHeart,
-  FiSmartphone,
-  FiMonitor,
   FiArrowLeft,
   FiUploadCloud,
   FiTrash2
@@ -32,7 +30,6 @@ import {
 const Generator = () => {
   // Tabs and view states
   const [activeTab, setActiveTab] = useState('copywriter'); // copywriter, designer, memory, history, favorites
-  const [previewDevice, setPreviewDevice] = useState('desktop'); // desktop, mobile
   const [cardFlipped, setCardFlipped] = useState(false);
 
   // Form input states (for AI Copywriter)
@@ -705,7 +702,7 @@ const Generator = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white font-bold shadow-lg shadow-pink-600/10 hover:shadow-xl hover:shadow-pink-600/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold shadow-lg shadow-indigo-600/10 hover:shadow-xl hover:shadow-indigo-600/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -864,34 +861,7 @@ const Generator = () => {
                 className="space-y-6"
               >
                 {/* Canvas Control Header */}
-                <div className="flex items-center justify-between p-2 bg-white dark:bg-[#120B2E]/70 border border-slate-100 dark:border-purple-900/20 rounded-2xl max-w-xl mx-auto shadow-sm w-full gap-4">
-                  <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-purple-950/20 border border-slate-200/20 rounded-xl">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice('desktop')}
-                      className={`p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
-                        previewDevice === 'desktop'
-                          ? 'bg-white dark:bg-purple-600 text-purple-700 dark:text-white shadow-sm'
-                          : 'text-slate-400 dark:text-purple-350/50 hover:text-slate-655'
-                      }`}
-                      title="Desktop View"
-                    >
-                      <FiMonitor size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPreviewDevice('mobile')}
-                      className={`p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer ${
-                        previewDevice === 'mobile'
-                          ? 'bg-white dark:bg-purple-600 text-purple-700 dark:text-white shadow-sm'
-                          : 'text-slate-400 dark:text-purple-350/50 hover:text-slate-655'
-                      }`}
-                      title="Mobile View"
-                    >
-                      <FiSmartphone size={14} />
-                    </button>
-                  </div>
-
+                <div className="flex items-center justify-center p-2 bg-white dark:bg-[#120B2E]/70 border border-slate-100 dark:border-purple-900/20 rounded-2xl max-w-xl mx-auto shadow-sm w-full">
                   <button
                     type="button"
                     onClick={() => setCardFlipped(!cardFlipped)}
@@ -907,41 +877,23 @@ const Generator = () => {
 
                 {/* Device View Wrapper */}
                 <div className="w-full flex justify-center items-center">
-                  {previewDevice === 'mobile' ? (
-                    <div className="w-[340px] max-w-full aspect-[9/18] bg-[#090D16] border-[12px] border-[#0e1320] rounded-[52px] shadow-2xl relative overflow-hidden flex flex-col justify-center items-center p-3 relative before:content-[''] before:absolute before:top-2 before:left-1/2 before:-translate-x-1/2 before:w-28 before:h-5 before:bg-[#0e1320] before:rounded-full before:z-30 before:border before:border-slate-800/10">
-                      <div className="w-full h-full scale-[0.88] origin-center flex items-center justify-center">
-                        <CardTemplate 
-                          title={generatedCard.title}
-                          content={generatedCard.content}
-                          recipient={generatedCard.recipient}
-                          sender={generatedCard.sender}
-                          occasion={generatedCard.occasion}
-                          tone={generatedCard.tone}
-                          template={generatedCard.template || formData.template}
-                          imageUrl={generatedCard.imageUrl}
-                          flipped={cardFlipped}
-                        />
-                      </div>
+                  <div className="relative w-full max-w-xl">
+                    <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/90 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/40 shadow-sm backdrop-blur-sm select-none">
+                      <span>✈️ Custom AI Generated</span>
                     </div>
-                  ) : (
-                    <div className="relative w-full max-w-xl">
-                      <div className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white/90 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/40 shadow-sm backdrop-blur-sm select-none">
-                        <span>✈️ Custom AI Generated</span>
-                      </div>
 
-                      <CardTemplate 
-                        title={generatedCard.title}
-                        content={generatedCard.content}
-                        recipient={generatedCard.recipient}
-                        sender={generatedCard.sender}
-                        occasion={generatedCard.occasion}
-                        tone={generatedCard.tone}
-                        template={generatedCard.template || formData.template}
-                        imageUrl={generatedCard.imageUrl}
-                        flipped={cardFlipped}
-                      />
-                    </div>
-                  )}
+                    <CardTemplate 
+                      title={generatedCard.title}
+                      content={generatedCard.content}
+                      recipient={generatedCard.recipient}
+                      sender={generatedCard.sender}
+                      occasion={generatedCard.occasion}
+                      tone={generatedCard.tone}
+                      template={generatedCard.template || formData.template}
+                      imageUrl={generatedCard.imageUrl}
+                      flipped={cardFlipped}
+                    />
+                  </div>
                 </div>
 
                 {/* Primary Card Actions */}
