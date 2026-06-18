@@ -84,7 +84,7 @@ const Navbar = () => {
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 text-purple-650 dark:text-purple-400 border border-purple-200/40 dark:border-purple-800/10 transition-colors"
+          className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 text-purple-600 dark:text-purple-400 border border-purple-200/40 dark:border-purple-800/10 transition-colors"
           title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
           {theme === 'light' ? <FiMoon size={16} /> : <FiSun size={16} />}

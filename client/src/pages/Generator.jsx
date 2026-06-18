@@ -405,7 +405,7 @@ const Generator = () => {
       <div className="flex items-center gap-4 mb-8 text-left">
         <Link 
           to="/" 
-          className="p-3 bg-white dark:bg-[#120B2E]/60 border border-slate-100 dark:border-purple-900/20 text-slate-700 dark:text-purple-300 hover:text-purple-650 rounded-full transition-colors flex items-center justify-center"
+          className="p-3 bg-white dark:bg-[#120B2E]/60 border border-slate-100 dark:border-purple-900/20 text-slate-700 dark:text-purple-300 hover:text-purple-600 rounded-full transition-colors flex items-center justify-center"
           title="Back to Home"
         >
           <FiArrowLeft size={18} />
@@ -705,7 +705,7 @@ const Generator = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-650 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white font-bold shadow-lg shadow-pink-600/10 hover:shadow-xl hover:shadow-pink-600/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-500 hover:from-pink-700 hover:to-rose-600 text-white font-bold shadow-lg shadow-pink-600/10 hover:shadow-xl hover:shadow-pink-600/25 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -1116,7 +1116,7 @@ const Generator = () => {
                     }}
                     className="p-3 bg-[#EEF2FF] dark:bg-indigo-950/20 border border-indigo-200/30 rounded-2xl flex flex-col items-center gap-1.5 hover:scale-[1.03] transition-transform cursor-pointer"
                   >
-                    <FiMail size={20} className="text-indigo-650" />
+                    <FiMail size={20} className="text-indigo-600" />
                     <span className="text-[10px] font-bold text-indigo-600">Email</span>
                   </button>
 

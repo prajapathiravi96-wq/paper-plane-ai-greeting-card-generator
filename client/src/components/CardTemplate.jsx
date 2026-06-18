@@ -44,7 +44,7 @@ const CardTemplate = ({ title, content, recipient, sender, occasion, tone, templ
       cardClass: "bg-gradient-to-br from-[#F0F7FF] via-[#E0EFFF] to-[#F8FAFC] text-blue-950 border border-blue-200/60 shadow-xl hover:shadow-2xl hover:border-blue-300",
       accentBg: "bg-blue-100 text-blue-800 border border-blue-200/40",
       headerFont: "font-sans text-2xl font-bold tracking-tight text-blue-900 border-b border-blue-200/45 pb-4 text-center mt-4",
-      bodyClass: "font-sans leading-relaxed text-slate-650 text-base px-2",
+      bodyClass: "font-sans leading-relaxed text-slate-600 text-base px-2",
       footerBorder: "border-t border-blue-200/40 pt-4 text-blue-900/70 font-sans text-xs",
       quoteColor: "text-blue-300/15",
       decorations: (

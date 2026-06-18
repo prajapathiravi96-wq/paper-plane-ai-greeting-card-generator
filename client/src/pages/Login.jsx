@@ -105,7 +105,7 @@ const Login = () => {
               <label className="block text-[10px] font-bold text-slate-500 dark:text-purple-300/70 uppercase tracking-widest">
                 Password
               </label>
-              <Link to="/forgot-password" className="text-[10px] font-bold text-purple-650 hover:text-purple-500 dark:text-purple-400">
+              <Link to="/forgot-password" className="text-[10px] font-bold text-purple-600 hover:text-purple-500 dark:text-purple-400">
                 Forgot password?
               </Link>
             </div>
@@ -136,7 +136,7 @@ const Login = () => {
 
         <div className="mt-6 text-center text-xs">
           <span className="text-slate-500 dark:text-purple-300/50">Don't have an account? </span>
-          <Link to="/register" className="font-bold text-purple-650 hover:text-purple-500 dark:text-purple-400">
+          <Link to="/register" className="font-bold text-purple-600 hover:text-purple-500 dark:text-purple-400">
             Sign up
           </Link>
         </div>

@@ -53,7 +53,7 @@ const ForgotPassword = () => {
         className="w-full max-w-md bg-white/70 dark:bg-[#120B2E]/60 backdrop-blur-xl border border-purple-200/50 dark:border-purple-900/30 p-8 rounded-[36px] shadow-2xl relative z-10 text-left"
       >
         <div className="mb-8">
-          <Link to="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-650 hover:text-purple-500 dark:text-purple-400 mb-6">
+          <Link to="/login" className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 hover:text-purple-500 dark:text-purple-400 mb-6">
             <FiArrowLeft size={14} />
             <span>Back to Login</span>
           </Link>
@@ -76,7 +76,7 @@ const ForgotPassword = () => {
             animate={{ scale: 1, opacity: 1 }}
             className="p-6 bg-purple-50 dark:bg-purple-950/20 border border-purple-200/40 dark:border-purple-800/10 rounded-3xl text-center space-y-4"
           >
-            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-650 dark:text-purple-400 flex items-center justify-center mx-auto text-2xl">
+            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto text-2xl">
               <FiCheckCircle />
             </div>
             <h3 className="font-bold text-slate-800 dark:text-white text-sm">Request Submitted</h3>

@@ -146,7 +146,7 @@ const Home = () => {
               Done in Seconds.
             </h1>
             
-            <p className="text-base md:text-xl text-slate-650 dark:text-purple-300/70 max-w-xl leading-relaxed relative z-10 font-medium">
+            <p className="text-base md:text-xl text-slate-600 dark:text-purple-300/70 max-w-xl leading-relaxed relative z-10 font-medium">
               Paper Plane uses advanced generative AI to craft heartfelt, funny, or professional greeting card messages, styled in exquisite designer templates. Attach them to gift orders or download instantly.
             </p>
             
@@ -468,7 +468,7 @@ const Home = () => {
                       <FiStar key={i} className="fill-amber-400 text-amber-400" size={14} />
                     ))}
                   </div>
-                  <p className="text-slate-650 dark:text-purple-200/80 text-sm leading-relaxed italic mb-6 relative z-10 font-medium">
+                  <p className="text-slate-600 dark:text-purple-200/80 text-sm leading-relaxed italic mb-6 relative z-10 font-medium">
                     "{testimonial.quote}"
                   </p>
                 </div>
@@ -508,15 +508,15 @@ const Home = () => {
         <div className="max-w-5xl mx-auto rounded-[40px] bg-white/70 dark:bg-[#120B2E]/60 backdrop-blur-xl border border-purple-250/15 dark:border-purple-800/10 p-8 md:p-12 shadow-xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divider-y md:divider-y-0 md:divider-x divider-purple-100">
             <div className="space-y-2">
-              <span className="block text-4xl md:text-5xl font-black text-purple-650 dark:text-purple-400">10,000+</span>
+              <span className="block text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400">10,000+</span>
               <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-purple-300/60">Cards Generated</span>
             </div>
             <div className="space-y-2 border-y md:border-y-0 md:border-x border-purple-200/50 dark:border-purple-900/30 py-6 md:py-0">
-              <span className="block text-4xl md:text-5xl font-black text-purple-650 dark:text-purple-400">2,500+</span>
+              <span className="block text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400">2,500+</span>
               <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-purple-300/60">Happy Users</span>
             </div>
             <div className="space-y-2">
-              <span className="block text-4xl md:text-5xl font-black text-purple-650 dark:text-purple-400">500+</span>
+              <span className="block text-4xl md:text-5xl font-black text-purple-600 dark:text-purple-400">500+</span>
               <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-purple-300/60">Daily Creations</span>
             </div>
           </div>
