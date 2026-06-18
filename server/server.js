@@ -1,19 +1,14 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import mongoose from 'mongoose';
-import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import cardRoutes from './routes/cardRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
-
+import { isSupabaseConfigured } from './config/supabase.js';
 
 // Load environment variables
 dotenv.config();
-
-// Connect to MongoDB
-connectDB();
 
 const app = express();
 
@@ -23,7 +18,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -37,7 +33,7 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date(),
     uptime: process.uptime(),
-    dbState: mongoose.connection.readyState // 1 = connected, 0 = disconnected
+    dbState: isSupabaseConfigured() ? 'connected' : 'disconnected'
   });
 });
 

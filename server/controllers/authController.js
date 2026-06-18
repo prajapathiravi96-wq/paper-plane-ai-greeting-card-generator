@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js';
-import mongoose from 'mongoose';
+import { supabase, isSupabaseConfigured } from '../config/supabase.js';
 
 // Seeding standard in-memory users.
 // Note: We pre-hash the password for the mock admin account to match standard comparison.
@@ -27,9 +26,7 @@ export const memoryUsers = [
   }
 ];
 
-const isDbConnected = () => {
-  return mongoose.connection.readyState === 1;
-};
+// (Helper isDbConnected removed; isSupabaseConfigured used directly)
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -52,29 +49,45 @@ export const registerUser = async (req, res, next) => {
       throw new Error('Please fill in all fields: name, email, password');
     }
 
-    if (isDbConnected()) {
-      const userExists = await User.findOne({ email });
+    if (isSupabaseConfigured()) {
+      const emailLower = email.toLowerCase();
+      const { data: userExists } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', emailLower)
+        .maybeSingle();
 
       if (userExists) {
         res.status(400);
         throw new Error('User already exists');
       }
 
-      const user = await User.create({
-        name,
-        email,
-        password,
-        role: 'user' // Default role
-      });
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .insert({
+          name,
+          email: emailLower,
+          password: hashedPassword,
+          role: 'user'
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
 
       return res.status(201).json({
         success: true,
         data: {
-          _id: user._id,
+          _id: user.id,
           name: user.name,
           email: user.email,
           role: user.role,
-          token: generateToken(user._id),
+          token: generateToken(user.id),
         }
       });
     } else {
@@ -133,18 +146,22 @@ export const loginUser = async (req, res, next) => {
 
     const emailLower = email.toLowerCase();
 
-    if (isDbConnected()) {
-      const user = await User.findOne({ email: emailLower });
+    if (isSupabaseConfigured()) {
+      const { data: user } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', emailLower)
+        .maybeSingle();
 
-      if (user && (await user.matchPassword(password))) {
+      if (user && (await bcrypt.compare(password, user.password))) {
         return res.status(200).json({
           success: true,
           data: {
-            _id: user._id,
+            _id: user.id,
             name: user.name,
             email: user.email,
             role: user.role,
-            token: generateToken(user._id),
+            token: generateToken(user.id),
           }
         });
       } else {

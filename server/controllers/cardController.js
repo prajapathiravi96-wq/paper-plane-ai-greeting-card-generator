@@ -1,10 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import GreetingCard from '../models/GreetingCard.js';
-import Analytics from '../models/Analytics.js';
-import mongoose from 'mongoose';
+import { supabase, isSupabaseConfigured } from '../config/supabase.js';
 import jwt from 'jsonwebtoken';
 
-// In-memory fallback database for cards and analytics in case MongoDB is offline
+// Unique mock ID generator for offline fallback simulation
+const generateMockId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+// In-memory fallback database for cards and analytics in case Supabase is offline
 export const memoryCards = [
   {
     _id: "666e1234567890abcdef0001",
@@ -64,11 +67,6 @@ export const memoryAnalytics = [
   { occasion: "Anniversary", tone: "Romantic", date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) },
   { occasion: "Corporate Appreciation", tone: "Professional", date: new Date() }
 ];
-
-// Helper to check if DB is connected
-const isDbConnected = () => {
-  return mongoose.connection.readyState === 1;
-};
 
 // Generates Mock fallback data when Gemini API key is missing or calls fail
 const generateMockCard = (occasion, tone, recipient, sender, length, language) => {
@@ -204,23 +202,48 @@ You must output a raw, valid JSON object containing exactly the following keys, 
       isFavorite: false
     };
 
-    if (isDbConnected()) {
-      const savedCard = await GreetingCard.create(finalCard);
-      
+    if (isSupabaseConfigured()) {
+      const { data: savedCard, error: cardError } = await supabase
+        .from('greeting_cards')
+        .insert({
+          occasion,
+          tone,
+          recipient,
+          sender,
+          length,
+          language,
+          title: cardData.title,
+          content: cardData.content,
+          caption: cardData.caption,
+          giftTag: cardData.giftTag,
+          template: template || 'minimalist',
+          userId: userId || null,
+          isFavorite: false
+        })
+        .select('*')
+        .single();
+
+      if (cardError) {
+        throw new Error(cardError.message);
+      }
+
+      // Map id to _id for frontend compatibility
+      const mappedCard = { _id: savedCard.id, ...savedCard };
+
       // Log Analytics
-      await Analytics.create({
-        cardId: savedCard._id,
+      await supabase.from('analytics').insert({
+        cardId: savedCard.id,
         occasion,
         tone,
       });
 
       return res.status(201).json({
         success: true,
-        data: savedCard,
+        data: mappedCard,
       });
     } else {
       // Memory Storage Fallback
-      const mockId = new mongoose.Types.ObjectId().toString();
+      const mockId = generateMockId();
       const memorySavedCard = {
         _id: mockId,
         ...finalCard,
@@ -237,7 +260,209 @@ You must output a raw, valid JSON object containing exactly the following keys, 
       return res.status(201).json({
         success: true,
         data: memorySavedCard,
-        note: "Saved in temporary memory storage (MongoDB not connected)",
+        note: "Saved in temporary memory storage (Supabase not connected)",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Generates Mock fallback data for memory cards when Gemini API key is missing or calls fail
+const generateMockMemoryCard = (recipient, sender, description) => {
+  let occasion = 'Memories';
+  let tone = 'Nostalgic';
+  let title = `Special Memory for ${recipient}`;
+  let content = `Dear ${recipient},\n\nThinking back to that beautiful memory of: "${description}". It brings so much warmth and happiness to my heart. Thank you for always being such a special part of my life.\n\nWith all my love,\n${sender || 'Me'}`;
+  let caption = `Cherishing beautiful memories with ${recipient}! ❤️✨`;
+  let giftTag = `To ${recipient}, From ${sender || 'Me'}. Forever in my heart.`;
+
+  const descLower = description.toLowerCase();
+  if (descLower.includes('birthday') || descLower.includes('candles') || descLower.includes('cake') || descLower.includes('born')) {
+    occasion = 'Birthday';
+    title = `Happy Birthday, ${recipient}!`;
+    content = `Dear ${recipient},\n\nHappy Birthday! Thinking back to that wonderful memory of: ${description}. Seeing you surrounded by so much joy and laughter is truly beautiful. May your day be filled with cake, warmth, and brand new memories to cherish!\n\nWarmest wishes,\n${sender || 'Me'}`;
+    caption = `Wishing a very happy birthday to ${recipient}! 🎂✨`;
+  } else if (descLower.includes('anniversary') || descLower.includes('wedding') || descLower.includes('marry') || descLower.includes('love')) {
+    occasion = 'Anniversary';
+    title = `Happy Anniversary, ${recipient}!`;
+    content = `Dear ${recipient},\n\nHappy Anniversary! Celebrating this special milestone and reflecting on our memory of: ${description}. Every single moment with you is a treasure, and I am so grateful for all the love and laughter we share.\n\nWith all my love,\n${sender || 'Me'}`;
+    caption = `Celebrating love and beautiful memories. Happy Anniversary! 💖`;
+  } else if (descLower.includes('thank') || descLower.includes('grateful') || descLower.includes('appreciate')) {
+    occasion = 'Thank You';
+    title = `Heartfelt Thanks, ${recipient}!`;
+    content = `Dear ${recipient},\n\nI just wanted to say a sincere thank you. Remembering our memory of: ${description} and feeling so incredibly grateful to have you in my life. Thank you for your kindness, support, and friendship.\n\nWith gratitude,\n${sender || 'Me'}`;
+    caption = `Feeling incredibly grateful for you, ${recipient}! 🙏✨`;
+  } else if (descLower.includes('congratulations') || descLower.includes('graduate') || descLower.includes('job') || descLower.includes('won')) {
+    occasion = 'Congratulations';
+    title = `Congratulations, ${recipient}!`;
+    content = `Dear ${recipient},\n\nSending you the warmest congratulations! Remembering how amazing it was during ${description}. You worked so hard for this, and seeing you succeed is absolutely inspiring. So proud of you!\n\nWarmest regards,\n${sender || 'Me'}`;
+    caption = `Huge congratulations to ${recipient}! So well deserved! 🎉👏`;
+  }
+
+  return { occasion, tone, title, content, caption, giftTag };
+};
+
+// Generate Card from Memory (Multimodal Gemini)
+export const generateMemoryCard = async (req, res, next) => {
+  try {
+    const { image, recipient, description, sender, template } = req.body;
+
+    if (!recipient || !description) {
+      res.status(400);
+      throw new Error('Please fill all required fields: recipient, description');
+    }
+
+    // Extract user ID optionally from Authorization header
+    let userId = null;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+      try {
+        const token = req.headers.authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'paper_plane_secret_jwt_key');
+        userId = decoded.id;
+      } catch (err) {
+        console.log('Generating card as guest (invalid token)');
+      }
+    }
+
+    let cardData;
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey && apiKey !== 'your_gemini_api_key_here') {
+      try {
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+        const systemPrompt = `You are an expert copywriter and greeting card designer.
+Analyze the uploaded image and the description of the memory to compose a beautiful greeting card:
+- Memory description: "${description}"
+- Recipient Name: "${recipient}"
+- Sender Name: "${sender || 'Someone who loves you'}"
+
+Based on this memory, write a highly personal and warm greeting. You must output a raw, valid JSON object containing exactly the following keys, with no markdown tags, no backticks, and no wrapper format:
+{
+  "title": "A short, beautiful, occasion-specific card title/headline (e.g., Happy 80th Birthday, Grandma!)",
+  "content": "The main greeting card message. Make it flow naturally, sound human-written, emotional, personal, and reflect the memory details.",
+  "caption": "A concise, engaging social media caption with emojis",
+  "giftTag": "A brief gift tag message, e.g. To: ..., From: ... [short greeting]",
+  "occasion": "The inferred occasion (e.g. Birthday, Anniversary, Wedding, Celebration, Friendship, Thank You, Festival, Farewell, Graduation)",
+  "tone": "The inferred emotional tone (e.g. Emotional, Romantic, Nostalgic, Funny, Professional, Inspirational)"
+}`;
+
+        let promptPayload = [systemPrompt];
+        
+        if (image) {
+          const matches = image.match(/^data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+);base64,(.+)$/);
+          let mimeType = 'image/jpeg';
+          let base64Data = image;
+
+          if (matches && matches.length === 3) {
+            mimeType = matches[1];
+            base64Data = matches[2];
+          }
+
+          const imagePart = {
+            inlineData: {
+              data: base64Data,
+              mimeType: mimeType
+            }
+          };
+          promptPayload.push(imagePart);
+        }
+
+        const result = await model.generateContent(promptPayload);
+        const text = result.response.text();
+        
+        const cleanedText = text
+          .replace(/```json/gi, '')
+          .replace(/```/g, '')
+          .trim();
+
+        cardData = JSON.parse(cleanedText);
+      } catch (geminiError) {
+        console.error('Gemini Multimodal API call failed, falling back to template simulation:', geminiError.message);
+        cardData = generateMockMemoryCard(recipient, sender, description);
+      }
+    } else {
+      cardData = generateMockMemoryCard(recipient, sender, description);
+    }
+
+    const finalCard = {
+      occasion: cardData.occasion || 'Memories',
+      tone: cardData.tone || 'Nostalgic',
+      recipient,
+      sender: sender || 'Me',
+      length: 'Medium',
+      language: 'English',
+      title: cardData.title,
+      content: cardData.content,
+      caption: cardData.caption,
+      giftTag: cardData.giftTag,
+      template: template || 'birthday',
+      imageUrl: image || null,
+      userId,
+      isFavorite: false
+    };
+
+    if (isSupabaseConfigured()) {
+      const { data: savedCard, error: cardError } = await supabase
+        .from('greeting_cards')
+        .insert({
+          occasion: finalCard.occasion,
+          tone: finalCard.tone,
+          recipient,
+          sender: finalCard.sender,
+          length: finalCard.length,
+          language: finalCard.language,
+          title: finalCard.title,
+          content: finalCard.content,
+          caption: finalCard.caption,
+          giftTag: finalCard.giftTag,
+          template: finalCard.template,
+          userId: userId || null,
+          isFavorite: false
+        })
+        .select('*')
+        .single();
+
+      if (cardError) {
+        throw new Error(cardError.message);
+      }
+
+      // Map id to _id for frontend compatibility, and add back the imageUrl
+      const mappedCard = { _id: savedCard.id, imageUrl: finalCard.imageUrl, ...savedCard };
+
+      // Log Analytics
+      await supabase.from('analytics').insert({
+        cardId: savedCard.id,
+        occasion: finalCard.occasion,
+        tone: finalCard.tone,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: mappedCard,
+      });
+    } else {
+      // Memory Storage Fallback
+      const mockId = generateMockId();
+      const memorySavedCard = {
+        _id: mockId,
+        ...finalCard,
+        createdAt: new Date(),
+      };
+      memoryCards.unshift(memorySavedCard);
+      
+      memoryAnalytics.unshift({
+        occasion: finalCard.occasion,
+        tone: finalCard.tone,
+        date: new Date()
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: memorySavedCard,
+        note: "Saved in temporary memory storage (Supabase not connected)",
       });
     }
   } catch (error) {
@@ -250,39 +475,44 @@ export const getCards = async (req, res, next) => {
   try {
     const { search, occasion, tone } = req.query;
     
-    if (isDbConnected()) {
-      let query = {};
+    if (isSupabaseConfigured()) {
+      let queryBuilder = supabase
+        .from('greeting_cards')
+        .select('*');
 
       // Regular users only see their own cards. Admins see everything. Guests see guest cards.
       if (req.user) {
         if (req.user.role !== 'admin') {
-          query.userId = req.user._id;
+          queryBuilder = queryBuilder.eq('userId', req.user._id);
         }
       } else {
-        query.userId = null;
+        queryBuilder = queryBuilder.is('userId', null);
       }
 
       if (search) {
-        query.$or = [
-          { recipient: { $regex: search, $options: 'i' } },
-          { sender: { $regex: search, $options: 'i' } },
-          { title: { $regex: search, $options: 'i' } },
-        ];
+        queryBuilder = queryBuilder.or(`recipient.ilike.%${search}%,sender.ilike.%${search}%,title.ilike.%${search}%`);
       }
 
       if (occasion && occasion !== 'All') {
-        query.occasion = occasion;
+        queryBuilder = queryBuilder.eq('occasion', occasion);
       }
 
       if (tone && tone !== 'All') {
-        query.tone = tone;
+        queryBuilder = queryBuilder.eq('tone', tone);
       }
 
-      const cards = await GreetingCard.find(query).sort({ createdAt: -1 });
+      const { data: cards, error } = await queryBuilder.order('createdAt', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const mappedCards = cards.map(c => ({ _id: c.id, ...c }));
+
       return res.status(200).json({
         success: true,
-        count: cards.length,
-        data: cards,
+        count: mappedCards.length,
+        data: mappedCards,
       });
     } else {
       // Memory query fallback
@@ -320,7 +550,7 @@ export const getCards = async (req, res, next) => {
         success: true,
         count: filteredCards.length,
         data: filteredCards,
-        note: "Data fetched from temporary memory (MongoDB not connected)",
+        note: "Data fetched from temporary memory (Supabase not connected)",
       });
     }
   } catch (error) {
@@ -333,8 +563,17 @@ export const getCardById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (isDbConnected()) {
-      const card = await GreetingCard.findById(id);
+    if (isSupabaseConfigured()) {
+      const { data: card, error } = await supabase
+        .from('greeting_cards')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
       if (!card) {
         res.status(404);
         throw new Error('Greeting card not found');
@@ -342,15 +581,17 @@ export const getCardById = async (req, res, next) => {
 
       // Check ownership
       if (card.userId) {
-        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId !== req.user._id)) {
           res.status(403);
           throw new Error('Not authorized to access this card');
         }
       }
 
+      const mappedCard = { _id: card.id, ...card };
+
       return res.status(200).json({
         success: true,
-        data: card,
+        data: mappedCard,
       });
     } else {
       const card = memoryCards.find((c) => c._id === id);
@@ -382,8 +623,17 @@ export const deleteCard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (isDbConnected()) {
-      const card = await GreetingCard.findById(id);
+    if (isSupabaseConfigured()) {
+      const { data: card, error: fetchError } = await supabase
+        .from('greeting_cards')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError) {
+        throw new Error(fetchError.message);
+      }
+
       if (!card) {
         res.status(404);
         throw new Error('Greeting card not found');
@@ -391,14 +641,14 @@ export const deleteCard = async (req, res, next) => {
 
       // Check ownership
       if (card.userId) {
-        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId !== req.user._id)) {
           res.status(403);
           throw new Error('Not authorized to delete this card');
         }
       }
 
-      await GreetingCard.findByIdAndDelete(id);
-      await Analytics.deleteMany({ cardId: id });
+      await supabase.from('greeting_cards').delete().eq('id', id);
+      await supabase.from('analytics').delete().eq('cardId', id);
 
       return res.status(200).json({
         success: true,
@@ -436,8 +686,17 @@ export const toggleFavoriteCard = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (isDbConnected()) {
-      const card = await GreetingCard.findById(id);
+    if (isSupabaseConfigured()) {
+      const { data: card, error: fetchError } = await supabase
+        .from('greeting_cards')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (fetchError) {
+        throw new Error(fetchError.message);
+      }
+
       if (!card) {
         res.status(404);
         throw new Error('Greeting card not found');
@@ -445,18 +704,28 @@ export const toggleFavoriteCard = async (req, res, next) => {
 
       // Check ownership
       if (card.userId) {
-        if (!req.user || (req.user.role !== 'admin' && card.userId.toString() !== req.user._id.toString())) {
+        if (!req.user || (req.user.role !== 'admin' && card.userId !== req.user._id)) {
           res.status(403);
           throw new Error('Not authorized to update this card');
         }
       }
 
-      card.isFavorite = !card.isFavorite;
-      await card.save();
+      const { data: updatedCard, error: updateError } = await supabase
+        .from('greeting_cards')
+        .update({ isFavorite: !card.isFavorite })
+        .eq('id', id)
+        .select('*')
+        .single();
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      const mappedCard = { _id: updatedCard.id, ...updatedCard };
 
       return res.status(200).json({
         success: true,
-        data: card
+        data: mappedCard
       });
     } else {
       const card = memoryCards.find((c) => c._id === id);

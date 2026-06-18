@@ -1,10 +1,5 @@
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import mongoose from 'mongoose';
-
-const isDbConnected = () => {
-  return mongoose.connection.readyState === 1;
-};
+import { supabase, isSupabaseConfigured } from '../config/supabase.js';
 
 // Optional protect middleware (doesn't reject if no token is present)
 export const optionalProtect = async (req, res, next) => {
@@ -18,8 +13,15 @@ export const optionalProtect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'paper_plane_secret_jwt_key');
 
-      if (isDbConnected()) {
-        req.user = await User.findById(decoded.id).select('-password');
+      if (isSupabaseConfigured()) {
+        const { data: user } = await supabase
+          .from('users')
+          .select('id, name, email, role')
+          .eq('id', decoded.id)
+          .single();
+        if (user) {
+          req.user = { _id: user.id, ...user };
+        }
       } else {
         const { memoryUsers } = await import('../controllers/authController.js');
         req.user = memoryUsers.find((u) => u._id === decoded.id);
@@ -48,9 +50,15 @@ export const protect = async (req, res, next) => {
       // Decode token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'paper_plane_secret_jwt_key');
 
-      // Find user
-      if (isDbConnected()) {
-        req.user = await User.findById(decoded.id).select('-password');
+      if (isSupabaseConfigured()) {
+        const { data: user } = await supabase
+          .from('users')
+          .select('id, name, email, role')
+          .eq('id', decoded.id)
+          .single();
+        if (user) {
+          req.user = { _id: user.id, ...user };
+        }
       } else {
         // Import memoryUsers dynamically or use global reference
         const { memoryUsers } = await import('../controllers/authController.js');

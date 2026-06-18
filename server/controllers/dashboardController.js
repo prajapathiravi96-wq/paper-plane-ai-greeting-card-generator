@@ -1,14 +1,6 @@
-import GreetingCard from '../models/GreetingCard.js';
-import User from '../models/User.js';
-import Analytics from '../models/Analytics.js';
+import { supabase, isSupabaseConfigured } from '../config/supabase.js';
 import { memoryCards } from './cardController.js';
 import { memoryUsers } from './authController.js';
-import mongoose from 'mongoose';
-
-// Helper to check DB connection
-const isDbConnected = () => {
-  return mongoose.connection.readyState === 1;
-};
 
 // Map template key to clean display name
 const getTemplateName = (key) => {
@@ -33,46 +25,63 @@ const getTemplateName = (key) => {
 // Aggregate Stats for the Dashboard
 export const getDashboardStats = async (req, res, next) => {
   try {
-    if (isDbConnected()) {
+    if (isSupabaseConfigured()) {
       // 1. Total Cards
-      const totalCards = await GreetingCard.countDocuments();
+      const { count: totalCards, error: countCardsError } = await supabase
+        .from('greeting_cards')
+        .select('*', { count: 'exact', head: true });
+
+      if (countCardsError) throw new Error(countCardsError.message);
 
       // 2. Total Users
-      let totalUsers = await User.countDocuments();
-      if (totalUsers === 0) {
-        totalUsers = 12; // seed count fallback
-      }
+      const { count: userCount, error: countUsersError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+
+      if (countUsersError) throw new Error(countUsersError.message);
+      
+      const totalUsers = userCount === 0 ? 12 : userCount;
+
+      // Fetch all analytics data for in-JS grouping (extremely resilient and works out-of-the-box on Supabase)
+      const { data: analyticsData, error: analyticsError } = await supabase
+        .from('analytics')
+        .select('occasion, tone, timestamp');
+
+      if (analyticsError) throw new Error(analyticsError.message);
+
+      const resolvedAnalytics = analyticsData || [];
 
       // 3. Most Popular Occasion
-      const popularOccasions = await Analytics.aggregate([
-        { $group: { _id: '$occasion', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 1 }
-      ]);
-      const topOccasion = popularOccasions.length > 0 ? popularOccasions[0]._id : 'Birthday';
+      const occasionCounts = {};
+      resolvedAnalytics.forEach(item => {
+        occasionCounts[item.occasion] = (occasionCounts[item.occasion] || 0) + 1;
+      });
+      let topOccasion = 'Birthday';
+      let maxOccasionCount = 0;
+      Object.keys(occasionCounts).forEach(occ => {
+        if (occasionCounts[occ] > maxOccasionCount) {
+          maxOccasionCount = occasionCounts[occ];
+          topOccasion = occ;
+        }
+      });
 
       // 4. Most Popular Tone
-      const popularTones = await Analytics.aggregate([
-        { $group: { _id: '$tone', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 1 }
-      ]);
-      const topTone = popularTones.length > 0 ? popularTones[0]._id : 'Emotional';
+      const toneCounts = {};
+      resolvedAnalytics.forEach(item => {
+        toneCounts[item.tone] = (toneCounts[item.tone] || 0) + 1;
+      });
+      let topTone = 'Emotional';
+      let maxToneCount = 0;
+      Object.keys(toneCounts).forEach(t => {
+        if (toneCounts[t] > maxToneCount) {
+          maxToneCount = toneCounts[t];
+          topTone = t;
+        }
+      });
 
       // 5. Cards Generated Per Day (Last 7 Days)
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      
-      const cardsPerDay = await Analytics.aggregate([
-        { $match: { timestamp: { $gte: sevenDaysAgo } } },
-        {
-          $group: {
-            _id: { $dateToString: { format: '%Y-%m-%d', date: '$timestamp' } },
-            count: { $sum: 1 }
-          }
-        },
-        { $sort: { _id: 1 } }
-      ]);
 
       const chartDailyData = [];
       let maxDailyCount = -1;
@@ -82,9 +91,12 @@ export const getDashboardStats = async (req, res, next) => {
         const d = new Date();
         d.setDate(d.getDate() - i);
         const dateStr = d.toISOString().split('T')[0];
-        const dayMatch = cardsPerDay.find(item => item._id === dateStr);
-        const count = dayMatch ? dayMatch.count : 0;
         
+        const count = resolvedAnalytics.filter(item => {
+          const itemDateStr = new Date(item.timestamp).toISOString().split('T')[0];
+          return itemDateStr === dateStr;
+        }).length;
+
         const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
         chartDailyData.push({ date: dayLabel, cards: count });
 
@@ -95,28 +107,48 @@ export const getDashboardStats = async (req, res, next) => {
       }
 
       // 6. Occasion Breakdown for Pie Chart
-      const occasionBreakdown = await Analytics.aggregate([
-        { $group: { _id: '$occasion', count: { $sum: 1 } } }
-      ]);
-      const chartOccasionData = occasionBreakdown.map(item => ({
-        name: item._id,
-        value: item.count
+      const chartOccasionData = Object.keys(occasionCounts).map(name => ({
+        name,
+        value: occasionCounts[name]
       }));
 
       // 7. Most Popular Template
-      const popularTemplates = await GreetingCard.aggregate([
-        { $group: { _id: '$template', count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 1 }
-      ]);
-      const topTemplateKey = popularTemplates.length > 0 ? popularTemplates[0]._id : 'minimalist';
+      const { data: cardsTemplates, error: templatesError } = await supabase
+        .from('greeting_cards')
+        .select('template');
+
+      if (templatesError) throw new Error(templatesError.message);
+
+      const templateCounts = {};
+      (cardsTemplates || []).forEach(item => {
+        if (item.template) {
+          templateCounts[item.template] = (templateCounts[item.template] || 0) + 1;
+        }
+      });
+      let topTemplateKey = 'minimalist';
+      let maxTemplateCount = 0;
+      Object.keys(templateCounts).forEach(tmpl => {
+        if (templateCounts[tmpl] > maxTemplateCount) {
+          maxTemplateCount = templateCounts[tmpl];
+          topTemplateKey = tmpl;
+        }
+      });
       const mostPopularTemplate = getTemplateName(topTemplateKey);
 
-      // 8. Recent Cards & Activity Table
-      const recentCards = await GreetingCard.find()
-        .sort({ createdAt: -1 })
-        .limit(6)
-        .populate('userId', 'name');
+      // 8. Recent Cards & Activity Table (uses Supabase join)
+      const { data: recentCardsData, error: recentError } = await supabase
+        .from('greeting_cards')
+        .select('*, users(name)')
+        .order('createdAt', { ascending: false })
+        .limit(6);
+
+      if (recentError) throw new Error(recentError.message);
+
+      const recentCards = (recentCardsData || []).map(c => ({
+        _id: c.id,
+        ...c,
+        userId: c.users ? { name: c.users.name } : null
+      }));
 
       const recentActivityTable = recentCards.map(c => ({
         _id: c._id,
@@ -276,7 +308,7 @@ export const getDashboardStats = async (req, res, next) => {
             apiSuccessRate: '98.9%'
           }
         },
-        note: "Data aggregated from temporary memory (MongoDB not connected)",
+        note: "Data aggregated from temporary memory (Supabase not connected)",
       });
     }
   } catch (error) {

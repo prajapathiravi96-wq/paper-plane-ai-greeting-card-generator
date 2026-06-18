@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CardTemplate = ({ title, content, recipient, sender, occasion, tone, template = 'birthday' }) => {
+const CardTemplate = ({ title, content, recipient, sender, occasion, tone, template = 'birthday', imageUrl = null, flipped = false }) => {
   
   // High-end template configurations matching requested themes
   const templates = {
@@ -130,47 +130,103 @@ const CardTemplate = ({ title, content, recipient, sender, occasion, tone, templ
   const selected = templates[selectedKey];
 
   return (
-    <div 
-      id="greeting-card-preview"
-      className={`w-full max-w-xl aspect-[4/5] mx-auto p-8 md:p-12 rounded-[36px] flex flex-col justify-between relative transition-all duration-300 ${selected.cardClass}`}
-    >
-      {selected.decorations}
+    <div className="w-full max-w-xl aspect-[4/5] mx-auto relative [perspective:1000px]">
+      <div 
+        id="greeting-card-preview"
+        className={`w-full h-full rounded-[36px] transition-transform duration-[800ms] [transform-style:preserve-3d] relative ${
+          flipped ? '[transform:rotateY(180deg)]' : ''
+        }`}
+      >
+        {/* FRONT VIEW */}
+        <div 
+          className={`absolute inset-0 p-8 md:p-12 rounded-[36px] flex flex-col justify-between [backface-visibility:hidden] transition-all duration-300 ${
+            selected.cardClass
+          }`}
+        >
+          {selected.decorations}
 
-      {/* Card fold crease line in exact center */}
-      <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-black/[0.04] to-transparent pointer-events-none z-15"></div>
+          {/* Card fold crease line in exact center */}
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-black/[0.04] to-transparent pointer-events-none z-15"></div>
 
-      {/* Card Header */}
-      <div className="relative z-10">
-        <div className="flex justify-center mb-2">
-          <span className={`px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${selected.accentBg}`}>
-            {occasion}
-          </span>
+          {/* Card Header */}
+          <div className="relative z-10">
+            <div className="flex justify-center mb-2">
+              <span className={`px-3.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest ${selected.accentBg}`}>
+                {occasion}
+              </span>
+            </div>
+            <h2 className={selected.headerFont}>
+              {title}
+            </h2>
+          </div>
+
+          {/* Card Body with Quote Marks */}
+          <div className="flex-1 flex flex-col justify-center my-2 relative z-10 px-4 overflow-hidden">
+            <span className={`absolute -top-6 left-2 text-6xl font-serif select-none pointer-events-none ${selected.quoteColor}`}>“</span>
+            
+            {/* Polaroid photo frame with picture inside */}
+            {imageUrl && (
+              <div className="mb-3 mx-auto w-44 max-w-full aspect-[4/3] rounded bg-white p-1.5 shadow-md border border-slate-200/40 rotate-[-1.5deg] hover:rotate-0 hover:scale-[1.03] transition-all duration-300 flex-shrink-0 relative overflow-hidden">
+                <img 
+                  src={imageUrl} 
+                  alt="Memory representation" 
+                  className="w-full h-full object-cover rounded-sm"
+                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-white/10 to-transparent"></div>
+              </div>
+            )}
+
+            <p className={`whitespace-pre-line text-center relative z-10 max-h-[160px] overflow-y-auto ${selected.bodyClass}`}>
+              {content}
+            </p>
+
+            <span className={`absolute -bottom-12 right-2 text-6xl font-serif select-none pointer-events-none ${selected.quoteColor}`}>”</span>
+          </div>
+
+          {/* Card Footer */}
+          <div className={`flex justify-between items-center text-sm relative z-10 ${selected.footerBorder}`}>
+            <div>
+              <span className="opacity-60 block text-[9px] uppercase tracking-widest font-semibold">For</span>
+              <span className="font-bold">{recipient}</span>
+            </div>
+            <div className="text-right">
+              <span className="opacity-60 block text-[9px] uppercase tracking-widest font-semibold">From</span>
+              <span className="font-bold">{sender}</span>
+            </div>
+          </div>
         </div>
-        <h2 className={selected.headerFont}>
-          {title}
-        </h2>
-      </div>
 
-      {/* Card Body with Quote Marks */}
-      <div className="flex-1 flex flex-col justify-center my-4 relative z-10 px-4">
-        <span className={`absolute -top-8 left-2 text-7xl font-serif select-none pointer-events-none ${selected.quoteColor}`}>“</span>
-        
-        <p className={`whitespace-pre-line text-center relative z-10 ${selected.bodyClass}`}>
-          {content}
-        </p>
+        {/* BACK VIEW */}
+        <div 
+          className={`absolute inset-0 p-8 md:p-12 rounded-[36px] flex flex-col justify-between items-center text-center [backface-visibility:hidden] [transform:rotateY(180deg)] transition-all duration-300 ${
+            selected.cardClass
+          }`}
+        >
+          <div className="absolute inset-4 border border-purple-500/10 pointer-events-none rounded-2xl"></div>
 
-        <span className={`absolute -bottom-14 right-2 text-7xl font-serif select-none pointer-events-none ${selected.quoteColor}`}>”</span>
-      </div>
+          {/* Crease line on back */}
+          <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[1px] bg-gradient-to-b from-transparent via-black/[0.04] to-transparent pointer-events-none z-15"></div>
 
-      {/* Card Footer */}
-      <div className={`flex justify-between items-center text-sm relative z-10 ${selected.footerBorder}`}>
-        <div>
-          <span className="opacity-60 block text-[9px] uppercase tracking-widest font-semibold">For</span>
-          <span className="font-bold">{recipient}</span>
-        </div>
-        <div className="text-right">
-          <span className="opacity-60 block text-[9px] uppercase tracking-widest font-semibold">From</span>
-          <span className="font-bold">{sender}</span>
+          <div className="flex-1 flex flex-col justify-center items-center gap-4 z-10">
+            {/* Paper Plane logo icon */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#7C3AED] to-[#A855F7] text-white flex items-center justify-center text-3xl shadow-lg shadow-purple-500/20">
+              ✈️
+            </div>
+            <div>
+              <h4 className="text-lg font-bold bg-gradient-to-r from-purple-800 to-indigo-800 dark:from-purple-300 dark:to-indigo-300 bg-clip-text text-transparent">
+                Paper Plane Studio
+              </h4>
+              <p className="text-[9px] text-slate-400 dark:text-purple-300/40 mt-1 font-mono uppercase tracking-widest font-bold">
+                Handcrafted with AI Magic
+              </p>
+            </div>
+          </div>
+
+          {/* barcode decalc */}
+          <div className="w-full flex flex-col items-center gap-1 opacity-40 dark:opacity-20 z-10">
+            <div className="h-5 w-32 bg-repeat-x" style={{ backgroundImage: 'linear-gradient(90deg, currentColor 0px, currentColor 1px, transparent 1px, transparent 4px, currentColor 4px, currentColor 6px, transparent 6px, transparent 7px, currentColor 7px, currentColor 10px, transparent 10px)' }}></div>
+            <span className="text-[7px] font-mono tracking-widest text-slate-700 dark:text-purple-100">PP-GREETING-CARD-2206</span>
+          </div>
         </div>
       </div>
     </div>
