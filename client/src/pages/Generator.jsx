@@ -87,6 +87,130 @@ const getMergedCards = (serverCards = null) => {
   return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 };
 
+const generateLocalFallbackCard = (occasion, tone, recipient, sender, length, language, template) => {
+  const isHindi = language.toLowerCase() === 'hindi';
+  const isTelugu = language.toLowerCase() === 'telugu';
+
+  if (isHindi) {
+    return {
+      _id: 'local_' + new Date().getTime().toString(),
+      occasion,
+      tone,
+      recipient,
+      sender,
+      length,
+      language,
+      template,
+      title: `${recipient} के लिए विशेष शुभकामना`,
+      content: `प्रिय ${recipient}, इस ${occasion} के पावन अवसर पर मेरी ओर से हार्दिक शुभकामनाएं। भगवान करे कि आपका यह दिन खुशियों से भरा हो और आपकी जिंदगी में हमेशा खुशहाली रहे। आपका दिन मंगलमय हो! ढेर सारे प्यार के साथ, ${sender}।`,
+      caption: `${occasion} की हार्दिक शुभकामनाएं! ✨`,
+      giftTag: `प्रिय ${recipient} के लिए, ${sender} की तरफ से।`,
+      isFavorite: false,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  if (isTelugu) {
+    return {
+      _id: 'local_' + new Date().getTime().toString(),
+      occasion,
+      tone,
+      recipient,
+      sender,
+      length,
+      language,
+      template,
+      title: `${recipient} కి ప్రత్యేక శుభాకాంక్షలు`,
+      content: `ప్రియమైన ${recipient}, ఈ ${occasion} పండగ సందర్భంగా నా హృదయపూర్వక శుభాకాంక్షలు. దేవుడు మీకు సంతోషాన్ని, ఆయురారోగ్యాలను ప్రసాదించాలని కోరుకుంటున్నాను. మీ జీవితం ఎల్లప్పుడూ ఆనందంగా సాగాలని ఆశిస్తున్నాను. శుభాకాంక్షలతో, ${sender}.`,
+      caption: `${occasion} శుభాకాంక్షలు! ✨`,
+      giftTag: `ప్రియమైన ${recipient} కి, ${sender} నుండి.`,
+      isFavorite: false,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  return {
+    _id: 'local_' + new Date().getTime().toString(),
+    occasion,
+    tone,
+    recipient,
+    sender,
+    length,
+    language,
+    template,
+    title: `To my dear ${recipient}`,
+    content: `Dearest ${recipient},\n\nWishing you a wonderful and blessed ${occasion}! May your day be filled with warm smiles, joyful laughter, and great memories that you'll cherish forever.\n\nWith all my love and best wishes,\n${sender}`,
+    caption: `Wishing a very happy ${occasion} to ${recipient}! 🎉✨`,
+    giftTag: `To: ${recipient} ∙ From: ${sender} ∙ Happy ${occasion}!`,
+    isFavorite: false,
+    createdAt: new Date().toISOString()
+  };
+};
+
+const generateLocalFallbackMemoryCard = (recipient, sender, description, language, template, imagePreview) => {
+  const isHindi = language.toLowerCase() === 'hindi';
+  const isTelugu = language.toLowerCase() === 'telugu';
+  const inferredOccasion = (description.toLowerCase().includes('birthday') || description.toLowerCase().includes('candles')) ? 'Birthday' : 'Memories';
+
+  if (isHindi) {
+    return {
+      _id: 'local_' + new Date().getTime().toString(),
+      occasion: inferredOccasion,
+      tone: 'Nostalgic',
+      recipient,
+      sender: sender || 'Me',
+      length: 'Medium',
+      language,
+      template,
+      title: `${recipient} के साथ खूबसूरत यादें`,
+      content: `प्रिय ${recipient}, जब मैं हमारी इस याद के बारे में सोचता हूँ: "${description}", तो मेरे दिल में एक अनोखी खुशी और मिठास आ जाती है। मेरे जीवन का एक खूबसूरत हिस्सा बनने के लिए आपका बहुत-बहुत धन्यवाद। ढेर सारे प्यार के साथ, ${sender || 'Me'}।`,
+      caption: `${recipient} के साथ बिताए हसीन पल! ❤️✨`,
+      giftTag: `प्रिय ${recipient} के लिए, ${sender || 'Me'} की ओर से।`,
+      imageUrl: imagePreview,
+      isFavorite: false,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  if (isTelugu) {
+    return {
+      _id: 'local_' + new Date().getTime().toString(),
+      occasion: inferredOccasion,
+      tone: 'Nostalgic',
+      recipient,
+      sender: sender || 'Me',
+      length: 'Medium',
+      language,
+      template,
+      title: `${recipient} తో మధుర జ్ఞాపకాలు`,
+      content: `ప్రియమైన ${recipient}, మన ఈ మధుర జ్ఞాపకాన్ని: "${description}" తలుచుకుంటే నా మనస్సు ఎంతో సంతోషంతో నిండిపోతుంది. నా జీవితంలో ఇంతటి అందమైన భాగమైనందుకు మీకు నా ధన్యవాదాలు. ప్రేమతో, ${sender || 'Me'}.`,
+      caption: `${recipient} తో మధురమైన క్షణాలు! ❤️✨`,
+      giftTag: `ప్రియమైన ${recipient} కి, ${sender || 'Me'} నుండి.`,
+      imageUrl: imagePreview,
+      isFavorite: false,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  return {
+    _id: 'local_' + new Date().getTime().toString(),
+    occasion: inferredOccasion,
+    tone: 'Nostalgic',
+    recipient,
+    sender: sender || 'Me',
+    length: 'Medium',
+    language,
+    template,
+    title: `Cherishing our memory, ${recipient}`,
+    content: `Dearest ${recipient},\n\nThinking back to that beautiful memory of: "${description}". It brings so much warmth and happiness to my heart. Thank you for always being such a special part of my life.\n\nWith all my love,\n${sender || 'Me'}`,
+    caption: `Cherishing beautiful memories with ${recipient}! ❤️✨`,
+    giftTag: `To ${recipient}, From ${sender || 'Me'}. Forever in my heart.`,
+    imageUrl: imagePreview,
+    isFavorite: false,
+    createdAt: new Date().toISOString()
+  };
+};
+
 const Generator = () => {
   // Tabs and view states
   const [activeTab, setActiveTab] = useState('copywriter'); // copywriter, designer, memory, history, favorites
@@ -316,24 +440,16 @@ const Generator = () => {
       
       // Secondary fallback logic
       setTimeout(() => {
-        const fallbackData = {
-          _id: 'local_' + new Date().getTime().toString(),
-          occasion: formData.occasion,
-          tone: formData.tone,
-          recipient: formData.recipient,
-          sender: formData.sender,
-          length: formData.length,
-          language: formData.language,
-          template: formData.template,
-          title: `To my dear ${formData.recipient}`,
-          content: `Dearest ${formData.recipient},\n\nWishing you a wonderful and blessed ${formData.occasion}! May your day be filled with warm smiles, joyful laughter, and great memories that you'll cherish forever.\n\nWith all my love and best wishes,\n${formData.sender}`,
-          caption: `Wishing a very happy ${formData.occasion} to ${formData.recipient}! 🎉✨`,
-          giftTag: `To: ${formData.recipient} ∙ From: ${formData.sender} ∙ Happy ${formData.occasion}!`,
-          isFavorite: false,
-          createdAt: new Date().toISOString()
-        };
+        const fallbackData = generateLocalFallbackCard(
+          formData.occasion,
+          formData.tone,
+          formData.recipient,
+          formData.sender,
+          formData.length,
+          formData.language,
+          formData.template
+        );
         
-        // Save to local-only list in localStorage
         const currentLocals = getLocalCards();
         saveLocalCards([fallbackData, ...currentLocals]);
         
@@ -438,26 +554,15 @@ const Generator = () => {
       setError(err.response?.data?.message || 'Server connection failed. Using offline backup content.');
       
       setTimeout(() => {
-        const inferredOccasion = (memoryDescription.toLowerCase().includes('birthday') || memoryDescription.toLowerCase().includes('candles')) ? 'Birthday' : 'Memories';
-        const fallbackCard = {
-          _id: 'local_' + new Date().getTime().toString(),
-          occasion: inferredOccasion,
-          tone: 'Nostalgic',
-          recipient: memoryRecipient,
-          sender: formData.sender || 'Me',
-          length: 'Medium',
-          language: 'English',
-          template: formData.template || 'birthday',
-          title: `Cherishing our memory, ${memoryRecipient}`,
-          content: `Dearest ${memoryRecipient},\n\nThinking back to that beautiful memory of: "${memoryDescription}". It brings so much warmth and happiness to my heart. Thank you for always being such a special part of my life.\n\nWith all my love,\n${formData.sender || 'Me'}`,
-          caption: `Cherishing beautiful memories with ${memoryRecipient}! ❤️✨`,
-          giftTag: `To ${memoryRecipient}, From ${formData.sender || 'Me'}. Forever in my heart.`,
-          imageUrl: imagePreview,
-          isFavorite: false,
-          createdAt: new Date().toISOString()
-        };
+        const fallbackCard = generateLocalFallbackMemoryCard(
+          memoryRecipient,
+          formData.sender,
+          memoryDescription,
+          formData.language,
+          formData.template || 'birthday',
+          imagePreview
+        );
 
-        // Save to local-only list in localStorage
         const currentLocals = getLocalCards();
         saveLocalCards([fallbackCard, ...currentLocals]);
 
