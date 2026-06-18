@@ -18,6 +18,66 @@ import {
   FiExternalLink
 } from 'react-icons/fi';
 
+// LocalStorage helpers for resilient offline operations
+const getLocalCards = () => {
+  try {
+    const local = localStorage.getItem('paper_plane_local_cards');
+    return local ? JSON.parse(local) : [];
+  } catch (e) {
+    console.error('Error reading paper_plane_local_cards:', e);
+    return [];
+  }
+};
+
+const saveLocalCards = (cards) => {
+  try {
+    localStorage.setItem('paper_plane_local_cards', JSON.stringify(cards));
+  } catch (e) {
+    console.error('Error saving paper_plane_local_cards:', e);
+  }
+};
+
+const getServerCache = () => {
+  try {
+    const cache = localStorage.getItem('paper_plane_server_cache');
+    return cache ? JSON.parse(cache) : [];
+  } catch (e) {
+    console.error('Error reading paper_plane_server_cache:', e);
+    return [];
+  }
+};
+
+const saveServerCache = (cards) => {
+  try {
+    localStorage.setItem('paper_plane_server_cache', JSON.stringify(cards));
+  } catch (e) {
+    console.error('Error saving paper_plane_server_cache:', e);
+  }
+};
+
+const getMergedCards = (serverCards = null) => {
+  const localCards = getLocalCards();
+  const actualServerCards = serverCards !== null ? serverCards : getServerCache();
+  const seenIds = new Set();
+  const merged = [];
+
+  for (const card of localCards) {
+    if (card && card._id && !seenIds.has(card._id)) {
+      seenIds.add(card._id);
+      merged.push(card);
+    }
+  }
+
+  for (const card of actualServerCards) {
+    if (card && card._id && !seenIds.has(card._id)) {
+      seenIds.add(card._id);
+      merged.push(card);
+    }
+  }
+
+  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+};
+
 const History = () => {
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,90 +106,36 @@ const History = () => {
   // Fetch cards
   const fetchCards = async () => {
     setLoading(true);
+    setError('');
     try {
-      const response = await API.get('/cards', {
-        params: {
-          search: search || undefined,
-          occasion: occasionFilter !== 'All' ? occasionFilter : undefined,
-          tone: toneFilter !== 'All' ? toneFilter : undefined,
-        }
-      });
+      const response = await API.get('/cards');
       if (response.data && response.data.success) {
-        setCards(response.data.data);
+        saveServerCache(response.data.data);
       }
     } catch (err) {
-      console.error(err);
-      setError('Could not retrieve cards from database. Displaying offline memory cards.');
-      
-      // Fallback local memory cards
-      const offlineCards = [
-        {
-          _id: "666e1234567890abcdef0001",
-          occasion: "Birthday",
-          tone: "Funny",
-          recipient: "Amit",
-          sender: "Ravi",
-          length: "Medium",
-          language: "English",
-          title: "Another Year of Wisdom (or Lack Thereof)",
-          content: "Happy Birthday Amit! You're not getting older, you're just becoming a classic. Like a fine wine, or a vintage car, or a piece of cheese left in the fridge too long. Hope your day is filled with lots of cake and zero calculations of your actual age. Cheers, Ravi!",
-          caption: "Older? Yes. Wiser? Debatable. Happy Birthday, Amit! 🎂",
-          giftTag: "To Amit, From Ravi. Wishing you cake and chaos!",
-          template: "birthday",
-          isFavorite: false,
-          createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
-        },
-        {
-          _id: "666e1234567890abcdef0002",
-          occasion: "Anniversary",
-          tone: "Romantic",
-          recipient: "Priya",
-          sender: "Rohan",
-          length: "Medium",
-          language: "English",
-          title: "To My Forever",
-          content: "Happy Anniversary, Priya! Every day spent with you feels like a beautiful dream come true. You are my laughter, my anchor, and my best friend. Thank you for sharing your life, your love, and your heart with me. Here's to forever, Rohan.",
-          caption: "Years fly by when you're with your favorite human. Happy Anniversary! ❤️",
-          giftTag: "To Priya, From Rohan. Forever and always.",
-          template: "anniversary",
-          isFavorite: true,
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
-        },
-        {
-          _id: "666e1234567890abcdef0003",
-          occasion: "Corporate Appreciation",
-          tone: "Professional",
-          recipient: "Tech Team",
-          sender: "CEO",
-          length: "Short",
-          language: "English",
-          title: "Outstanding Contribution",
-          content: "Dear Tech Team, thank you for your exceptional commitment to delivering this project. Your engineering expertise and dedication have set a new benchmark for excellence. We appreciate everything you do.",
-          caption: "Big shoutout to our Tech Team for their hard work! 🚀",
-          giftTag: "Thank you for driving success. - CEO",
-          template: "corporate",
-          isFavorite: false,
-          createdAt: new Date()
-        }
-      ];
-
-      // Local manual filter
-      let filtered = offlineCards;
-      if (search) {
-        filtered = filtered.filter(c => 
-          c.recipient.toLowerCase().includes(search.toLowerCase()) ||
-          c.sender.toLowerCase().includes(search.toLowerCase()) ||
-          c.title.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      if (occasionFilter !== 'All') {
-        filtered = filtered.filter(c => c.occasion === occasionFilter);
-      }
-      if (toneFilter !== 'All') {
-        filtered = filtered.filter(c => c.tone === toneFilter);
-      }
-      setCards(filtered);
+      console.warn('Could not retrieve cards from server, displaying offline/cached cards.', err);
     }
+
+    const merged = getMergedCards();
+    
+    // Apply client-side manual filtering
+    let filtered = merged;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(c => 
+        (c.recipient && c.recipient.toLowerCase().includes(searchLower)) ||
+        (c.sender && c.sender.toLowerCase().includes(searchLower)) ||
+        (c.title && c.title.toLowerCase().includes(searchLower)) ||
+        (c.content && c.content.toLowerCase().includes(searchLower))
+      );
+    }
+    if (occasionFilter !== 'All') {
+      filtered = filtered.filter(c => c.occasion === occasionFilter);
+    }
+    if (toneFilter !== 'All') {
+      filtered = filtered.filter(c => c.tone === toneFilter);
+    }
+    setCards(filtered);
     setLoading(false);
   };
 
@@ -145,30 +151,77 @@ const History = () => {
     e.stopPropagation();
     if (!window.confirm('Are you sure you want to permanently delete this greeting card?')) return;
 
-    try {
-      await API.delete(`/cards/${id}`);
+    const isLocal = id.toString().startsWith('local_');
+
+    const deleteLocally = () => {
+      const locals = getLocalCards();
+      saveLocalCards(locals.filter(c => c._id !== id));
+
+      const cache = getServerCache();
+      saveServerCache(cache.filter(c => c._id !== id));
+
       setCards(cards.filter(c => c._id !== id));
       if (selectedCard && selectedCard._id === id) {
         setSelectedCard(null);
       }
+    };
+
+    if (isLocal) {
+      deleteLocally();
+      return;
+    }
+
+    try {
+      const response = await API.delete(`/cards/${id}`);
+      if (response && response.data && response.data.success) {
+        deleteLocally();
+      } else {
+        deleteLocally();
+      }
     } catch (err) {
-      console.error(err);
-      setCards(cards.filter(c => c._id !== id));
+      console.warn('API delete failed, falling back to local delete:', err);
+      deleteLocally();
     }
   };
 
   // Toggle favorite status
   const handleToggleFavorite = async (id, e) => {
     e.stopPropagation();
+    const isLocal = id.toString().startsWith('local_');
+
+    const toggleLocally = () => {
+      const locals = getLocalCards();
+      const updatedLocals = locals.map(c => c._id === id ? { ...c, isFavorite: !c.isFavorite } : c);
+      saveLocalCards(updatedLocals);
+
+      const cache = getServerCache();
+      const updatedCache = cache.map(c => c._id === id ? { ...c, isFavorite: !c.isFavorite } : c);
+      saveServerCache(updatedCache);
+
+      setCards(cards.map(c => c._id === id ? { ...c, isFavorite: !c.isFavorite } : c));
+    };
+
+    if (isLocal) {
+      toggleLocally();
+      return;
+    }
+
     try {
       const res = await API.put(`/cards/${id}/favorite`);
       if (res.data && res.data.success) {
-        setCards(cards.map(c => c._id === id ? { ...c, isFavorite: res.data.data.isFavorite } : c));
+        const updatedCard = res.data.data;
+        
+        const cache = getServerCache();
+        const updatedCache = cache.map(c => c._id === updatedCard._id ? updatedCard : c);
+        saveServerCache(updatedCache);
+
+        setCards(cards.map(c => c._id === id ? { ...c, isFavorite: updatedCard.isFavorite } : c));
+      } else {
+        toggleLocally();
       }
     } catch (err) {
-      console.error(err);
-      // Fallback local toggle
-      setCards(cards.map(c => c._id === id ? { ...c, isFavorite: !c.isFavorite } : c));
+      console.warn('API toggling favorite failed, falling back to local toggle:', err);
+      toggleLocally();
     }
   };
 

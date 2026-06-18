@@ -27,6 +27,66 @@ import {
   FiTrash2
 } from 'react-icons/fi';
 
+// LocalStorage helpers for resilient offline operations
+const getLocalCards = () => {
+  try {
+    const local = localStorage.getItem('paper_plane_local_cards');
+    return local ? JSON.parse(local) : [];
+  } catch (e) {
+    console.error('Error reading paper_plane_local_cards:', e);
+    return [];
+  }
+};
+
+const saveLocalCards = (cards) => {
+  try {
+    localStorage.setItem('paper_plane_local_cards', JSON.stringify(cards));
+  } catch (e) {
+    console.error('Error saving paper_plane_local_cards:', e);
+  }
+};
+
+const getServerCache = () => {
+  try {
+    const cache = localStorage.getItem('paper_plane_server_cache');
+    return cache ? JSON.parse(cache) : [];
+  } catch (e) {
+    console.error('Error reading paper_plane_server_cache:', e);
+    return [];
+  }
+};
+
+const saveServerCache = (cards) => {
+  try {
+    localStorage.setItem('paper_plane_server_cache', JSON.stringify(cards));
+  } catch (e) {
+    console.error('Error saving paper_plane_server_cache:', e);
+  }
+};
+
+const getMergedCards = (serverCards = null) => {
+  const localCards = getLocalCards();
+  const actualServerCards = serverCards !== null ? serverCards : getServerCache();
+  const seenIds = new Set();
+  const merged = [];
+
+  for (const card of localCards) {
+    if (card && card._id && !seenIds.has(card._id)) {
+      seenIds.add(card._id);
+      merged.push(card);
+    }
+  }
+
+  for (const card of actualServerCards) {
+    if (card && card._id && !seenIds.has(card._id)) {
+      seenIds.add(card._id);
+      merged.push(card);
+    }
+  }
+
+  return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+};
+
 const Generator = () => {
   // Tabs and view states
   const [activeTab, setActiveTab] = useState('copywriter'); // copywriter, designer, memory, history, favorites
@@ -99,10 +159,17 @@ const Generator = () => {
     try {
       const response = await API.get('/cards');
       if (response.data && response.data.success) {
-        setSavedCards(response.data.data);
+        saveServerCache(response.data.data);
+        const combined = getMergedCards(response.data.data);
+        setSavedCards(combined);
+      } else {
+        const combined = getMergedCards();
+        setSavedCards(combined);
       }
     } catch (err) {
-      console.error('Error fetching saved cards:', err);
+      console.error('Error fetching saved cards, returning cached cards:', err);
+      const combined = getMergedCards();
+      setSavedCards(combined);
     } finally {
       setLoadingSaved(false);
     }
@@ -110,32 +177,83 @@ const Generator = () => {
 
   const handleToggleFavorite = async () => {
     if (!generatedCard || !generatedCard._id) return;
+    const isLocal = generatedCard._id.toString().startsWith('local_');
+
+    const toggleLocally = () => {
+      const targetId = generatedCard._id;
+      const newFavoriteState = !generatedCard.isFavorite;
+
+      const locals = getLocalCards();
+      const updatedLocals = locals.map(c => c._id === targetId ? { ...c, isFavorite: newFavoriteState } : c);
+      saveLocalCards(updatedLocals);
+
+      const cache = getServerCache();
+      const updatedCache = cache.map(c => c._id === targetId ? { ...c, isFavorite: newFavoriteState } : c);
+      saveServerCache(updatedCache);
+
+      setGeneratedCard(prev => ({ ...prev, isFavorite: newFavoriteState }));
+      setSavedCards(getMergedCards());
+    };
+
+    if (isLocal) {
+      toggleLocally();
+      return;
+    }
+
     try {
       const response = await API.put(`/cards/${generatedCard._id}/favorite`);
       if (response.data && response.data.success) {
         const updatedCard = response.data.data;
         setGeneratedCard(prev => ({ ...prev, isFavorite: updatedCard.isFavorite }));
-        // Refresh local cache lists
-        fetchSavedCards();
+        
+        const cache = getServerCache();
+        const updatedCache = cache.map(c => c._id === updatedCard._id ? updatedCard : c);
+        saveServerCache(updatedCache);
+        
+        setSavedCards(getMergedCards());
+      } else {
+        toggleLocally();
       }
     } catch (err) {
-      console.error('Error toggling favorite:', err);
+      console.warn('API toggling favorite failed, falling back to local toggle:', err);
+      toggleLocally();
     }
   };
 
   const handleDeleteSavedCard = async (e, id) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this card from history?")) return;
+
+    const isLocal = id.toString().startsWith('local_');
+
+    const deleteLocally = () => {
+      const locals = getLocalCards();
+      saveLocalCards(locals.filter(c => c._id !== id));
+
+      const cache = getServerCache();
+      saveServerCache(cache.filter(c => c._id !== id));
+
+      setSavedCards(prev => prev.filter(c => c._id !== id));
+      if (generatedCard && generatedCard._id === id) {
+        setGeneratedCard(null);
+      }
+    };
+
+    if (isLocal) {
+      deleteLocally();
+      return;
+    }
+
     try {
       const response = await API.delete(`/cards/${id}`);
       if (response.data && response.data.success) {
-        setSavedCards(prev => prev.filter(c => c._id !== id));
-        if (generatedCard && generatedCard._id === id) {
-          setGeneratedCard(null);
-        }
+        deleteLocally();
+      } else {
+        deleteLocally();
       }
     } catch (err) {
-      console.error('Error deleting card:', err);
+      console.warn('API delete failed, falling back to local delete:', err);
+      deleteLocally();
     }
   };
 
@@ -183,7 +301,12 @@ const Generator = () => {
     try {
       const response = await API.post('/generate-card', formData);
       if (response.data && response.data.success) {
-        setGeneratedCard(response.data.data);
+        const generated = response.data.data;
+        setGeneratedCard(generated);
+        // Save to server cache in localStorage
+        const currentCache = getServerCache();
+        const updatedCache = [generated, ...currentCache.filter(c => c._id !== generated._id)];
+        saveServerCache(updatedCache);
       } else {
         throw new Error('Failed to generate card content');
       }
@@ -194,7 +317,7 @@ const Generator = () => {
       // Secondary fallback logic
       setTimeout(() => {
         const fallbackData = {
-          _id: new Date().getTime().toString(),
+          _id: 'local_' + new Date().getTime().toString(),
           occasion: formData.occasion,
           tone: formData.tone,
           recipient: formData.recipient,
@@ -205,8 +328,15 @@ const Generator = () => {
           title: `To my dear ${formData.recipient}`,
           content: `Dearest ${formData.recipient},\n\nWishing you a wonderful and blessed ${formData.occasion}! May your day be filled with warm smiles, joyful laughter, and great memories that you'll cherish forever.\n\nWith all my love and best wishes,\n${formData.sender}`,
           caption: `Wishing a very happy ${formData.occasion} to ${formData.recipient}! 🎉✨`,
-          giftTag: `To: ${formData.recipient} ∙ From: ${formData.sender} ∙ Happy ${formData.occasion}!`
+          giftTag: `To: ${formData.recipient} ∙ From: ${formData.sender} ∙ Happy ${formData.occasion}!`,
+          isFavorite: false,
+          createdAt: new Date().toISOString()
         };
+        
+        // Save to local-only list in localStorage
+        const currentLocals = getLocalCards();
+        saveLocalCards([fallbackData, ...currentLocals]);
+        
         setGeneratedCard(fallbackData);
         setLoading(false);
       }, 1500);
@@ -288,13 +418,18 @@ const Generator = () => {
 
       const response = await API.post('/generate-memory-card', payload);
       if (response.data && response.data.success) {
-        setGeneratedCard(response.data.data);
+        const generated = response.data.data;
+        setGeneratedCard(generated);
         setFormData(prev => ({
           ...prev,
-          occasion: response.data.data.occasion,
-          tone: response.data.data.tone,
+          occasion: generated.occasion,
+          tone: generated.tone,
           recipient: memoryRecipient
         }));
+        // Save to server cache in localStorage
+        const currentCache = getServerCache();
+        const updatedCache = [generated, ...currentCache.filter(c => c._id !== generated._id)];
+        saveServerCache(updatedCache);
       } else {
         throw new Error('Failed to generate card from memory');
       }
@@ -305,7 +440,7 @@ const Generator = () => {
       setTimeout(() => {
         const inferredOccasion = (memoryDescription.toLowerCase().includes('birthday') || memoryDescription.toLowerCase().includes('candles')) ? 'Birthday' : 'Memories';
         const fallbackCard = {
-          _id: new Date().getTime().toString(),
+          _id: 'local_' + new Date().getTime().toString(),
           occasion: inferredOccasion,
           tone: 'Nostalgic',
           recipient: memoryRecipient,
@@ -317,8 +452,15 @@ const Generator = () => {
           content: `Dearest ${memoryRecipient},\n\nThinking back to that beautiful memory of: "${memoryDescription}". It brings so much warmth and happiness to my heart. Thank you for always being such a special part of my life.\n\nWith all my love,\n${formData.sender || 'Me'}`,
           caption: `Cherishing beautiful memories with ${memoryRecipient}! ❤️✨`,
           giftTag: `To ${memoryRecipient}, From ${formData.sender || 'Me'}. Forever in my heart.`,
-          imageUrl: imagePreview
+          imageUrl: imagePreview,
+          isFavorite: false,
+          createdAt: new Date().toISOString()
         };
+
+        // Save to local-only list in localStorage
+        const currentLocals = getLocalCards();
+        saveLocalCards([fallbackCard, ...currentLocals]);
+
         setGeneratedCard(fallbackCard);
         setLoading(false);
       }, 1500);
