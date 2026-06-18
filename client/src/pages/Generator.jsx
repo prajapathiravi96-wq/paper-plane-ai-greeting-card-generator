@@ -87,11 +87,36 @@ const getMergedCards = (serverCards = null) => {
   return merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 };
 
+const hindiOccasionMap = {
+  'Birthday': 'जन्मदिन',
+  'Anniversary': 'वर्षगांठ',
+  'Wedding': 'शादी',
+  'Congratulations': 'बधाई',
+  'Thank You': 'धन्यवाद',
+  'Festival': 'त्यौहार',
+  'Corporate Appreciation': 'सराहना',
+  'Friendship': 'मित्रता',
+  'Farewell': 'विदाई'
+};
+
+const teluguOccasionMap = {
+  'Birthday': 'పుట్టినరోజు',
+  'Anniversary': 'వివాహ వార్షికోత్సవ',
+  'Wedding': 'వివాహ',
+  'Congratulations': 'అభినందనల',
+  'Thank You': 'ధన్యవాదాల',
+  'Festival': 'పండుగ',
+  'Corporate Appreciation': 'కృతజ్ఞతల',
+  'Friendship': 'స్నేహ',
+  'Farewell': 'వీడ్కోలు'
+};
+
 const generateLocalFallbackCard = (occasion, tone, recipient, sender, length, language, template) => {
   const isHindi = language.toLowerCase() === 'hindi';
   const isTelugu = language.toLowerCase() === 'telugu';
 
   if (isHindi) {
+    const translatedOccasion = hindiOccasionMap[occasion] || occasion;
     return {
       _id: 'local_' + new Date().getTime().toString(),
       occasion,
@@ -101,9 +126,9 @@ const generateLocalFallbackCard = (occasion, tone, recipient, sender, length, la
       length,
       language,
       template,
-      title: `${recipient} के लिए विशेष शुभकामना`,
-      content: `प्रिय ${recipient}, इस ${occasion} के पावन अवसर पर मेरी ओर से हार्दिक शुभकामनाएं। भगवान करे कि आपका यह दिन खुशियों से भरा हो और आपकी जिंदगी में हमेशा खुशहाली रहे। आपका दिन मंगलमय हो! ढेर सारे प्यार के साथ, ${sender}।`,
-      caption: `${occasion} की हार्दिक शुभकामनाएं! ✨`,
+      title: `${recipient} के लिए विशेष ${translatedOccasion} शुभकामना`,
+      content: `प्रिय ${recipient}, इस ${translatedOccasion} के पावन अवसर पर मेरी ओर से हार्दिक शुभकामनाएं। भगवान करे कि आपका यह दिन खुशियों से भरा हो और आपकी जिंदगी में हमेशा खुशहाली रहे। आपका दिन मंगलमय हो! ढेर सारे प्यार के साथ, ${sender}।`,
+      caption: `${translatedOccasion} की हार्दिक शुभकामनाएं! ✨`,
       giftTag: `प्रिय ${recipient} के लिए, ${sender} की तरफ से।`,
       isFavorite: false,
       createdAt: new Date().toISOString()
@@ -111,6 +136,8 @@ const generateLocalFallbackCard = (occasion, tone, recipient, sender, length, la
   }
 
   if (isTelugu) {
+    const translatedOccasion = teluguOccasionMap[occasion] || occasion;
+    const occasionPhrase = occasion === 'Festival' ? 'పండుగ' : `${translatedOccasion} పండగ`;
     return {
       _id: 'local_' + new Date().getTime().toString(),
       occasion,
@@ -120,9 +147,9 @@ const generateLocalFallbackCard = (occasion, tone, recipient, sender, length, la
       length,
       language,
       template,
-      title: `${recipient} కి ప్రత్యేక శుభాకాంక్షలు`,
-      content: `ప్రియమైన ${recipient}, ఈ ${occasion} పండగ సందర్భంగా నా హృదయపూర్వక శుభాకాంక్షలు. దేవుడు మీకు సంతోషాన్ని, ఆయురారోగ్యాలను ప్రసాదించాలని కోరుకుంటున్నాను. మీ జీవితం ఎల్లప్పుడూ ఆనందంగా సాగాలని ఆశిస్తున్నాను. శుభాకాంక్షలతో, ${sender}.`,
-      caption: `${occasion} శుభాకాంక్షలు! ✨`,
+      title: `${recipient} కి ప్రత్యేక ${translatedOccasion} శుభాకాంక్షలు`,
+      content: `ప్రియమైన ${recipient}, ఈ ${occasionPhrase} సందర్భంగా నా హృదయపూర్వక శుభాకాంక్షలు. దేవుడు మీకు సంతోషాన్ని, ఆయురారోగ్యాలను ప్రసాదించాలని కోరుకుంటున్నాను. మీ జీవితం ఎల్లప్పుడూ ఆనందంగా సాగాలని ఆశిస్తున్నాను. శుభాకాంక్షలతో, ${sender}.`,
+      caption: `${translatedOccasion} శుభాకాంక్షలు! ✨`,
       giftTag: `ప్రియమైన ${recipient} కి, ${sender} నుండి.`,
       isFavorite: false,
       createdAt: new Date().toISOString()
