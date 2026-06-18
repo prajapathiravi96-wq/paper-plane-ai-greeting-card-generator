@@ -134,7 +134,7 @@ const Home = () => {
             {/* Giant glowing purple orb behind the title text */}
             <div className="absolute -top-20 -left-20 w-[450px] h-[450px] rounded-full bg-[radial-gradient(circle_at_center,rgba(124,58,237,0.22)_0%,rgba(168,85,247,0.06)_50%,transparent_100%)] dark:bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.15)_0%,rgba(124,58,237,0.03)_50%,transparent_100%)] blur-[90px] pointer-events-none z-0"></div>
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-purple-100 dark:bg-purple-950/40 text-purple-750 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/20 tracking-wider">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/20 tracking-wider">
               ✈️ AI-Powered Greeting Creator
             </span>
 

@@ -217,7 +217,7 @@ const History = () => {
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white md:text-4xl">
             History Vault
           </h1>
-          <p className="text-slate-500 dark:text-purple-300/60 text-sm max-w-xl font-medium">
+          <p className="text-slate-500 dark:text-purple-200 text-sm max-w-xl font-medium">
             Browse through all generated greeting cards. Search, filter, inspect details, and manage favorites.
           </p>
         </div>
@@ -225,7 +225,7 @@ const History = () => {
         {cards.length > 0 && (
           <button
             onClick={handleExportHistory}
-            className="px-5 py-2.5 bg-purple-650 hover:bg-purple-750 text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 bg-[#7C3AED] hover:bg-[#6D28D9] text-white rounded-xl font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             <FiDownload />
             <span>Export History (JSON)</span>
@@ -330,7 +330,7 @@ const History = () => {
                     <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 tracking-wider">
                       {card.occasion}
                     </span>
-                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-slate-50 dark:bg-purple-900/20 text-slate-500 dark:text-purple-300/80 tracking-wider">
+                    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-slate-50 dark:bg-purple-900/20 text-slate-500 dark:text-purple-200 tracking-wider">
                       {card.tone}
                     </span>
                   </div>
@@ -342,23 +342,23 @@ const History = () => {
                     >
                       <FiHeart className={card.isFavorite ? "fill-rose-500 text-rose-500" : "text-slate-400 dark:text-purple-400"} size={16} />
                     </button>
-                    <span className="text-[10px] text-slate-400 dark:text-purple-300/60 flex items-center gap-1">
+                    <span className="text-[10px] text-slate-400 dark:text-purple-300 flex items-center gap-1">
                       <FiCalendar />
                       {new Date(card.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                 </div>
                 
-                <h3 className="font-bold text-[#0F172A] dark:text-white group-hover:text-purple-650 dark:group-hover:text-purple-400 transition-colors text-base line-clamp-1 mb-2 font-serif">
+                <h3 className="font-bold text-[#0F172A] dark:text-white group-hover:text-[#7C3AED] dark:group-hover:text-purple-300 transition-colors text-base line-clamp-1 mb-2 font-serif">
                   {card.title}
                 </h3>
-                <p className="text-slate-500 dark:text-purple-300/50 text-xs line-clamp-3 leading-relaxed font-sans mb-4">
+                <p className="text-slate-500 dark:text-purple-200/90 text-xs line-clamp-3 leading-relaxed font-sans mb-4">
                   {card.content}
                 </p>
               </div>
 
               <div className="flex justify-between items-center border-t border-purple-500/5 pt-4 text-xs">
-                <div className="text-slate-450 dark:text-purple-300/50">
+                <div className="text-slate-450 dark:text-purple-300">
                   To: <span className="font-bold text-slate-700 dark:text-purple-200">{card.recipient}</span>
                 </div>
                 <div className="flex gap-2">
@@ -388,7 +388,7 @@ const History = () => {
             🔍
           </div>
           <h3 className="font-bold text-slate-800 dark:text-white mb-1">No Cards Found</h3>
-          <p className="text-slate-450 dark:text-purple-300/60 text-xs max-w-xs mx-auto leading-relaxed">
+          <p className="text-slate-450 dark:text-purple-200 text-xs max-w-xs mx-auto leading-relaxed">
             We couldn't find any greeting cards matching your search query or selected filters.
           </p>
         </div>
@@ -446,7 +446,7 @@ const History = () => {
               <div className="flex gap-3 p-4 justify-end bg-white dark:bg-[#150E35]">
                 <button
                   onClick={() => handleCopy(selectedCard.content)}
-                  className="px-5 py-2.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-purple-650 dark:text-purple-300 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/40 text-[#7C3AED] dark:text-purple-300 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer"
                 >
                   {copiedText ? <FiCheck size={14} className="text-green-500 animate-bounce" /> : <FiCopy size={14} />}
                   <span>{copiedText ? 'Copied Text' : 'Copy Message'}</span>

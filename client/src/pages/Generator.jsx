@@ -343,7 +343,7 @@ const Generator = () => {
                       duration: 3,
                       ease: "easeInOut"
                     }}
-                    className="text-6xl text-purple-650 dark:text-purple-400"
+                    className="text-6xl text-[#7C3AED] dark:text-purple-400"
                   >
                     ✈️
                   </motion.div>
@@ -625,7 +625,7 @@ const Generator = () => {
                       handleDownloadPNG();
                       setShowShareModal(false);
                     }}
-                    className="py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-purple-650 dark:hover:bg-purple-700 text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:scale-[1.02] transform transition-all cursor-pointer"
+                    className="py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-[#7C3AED] dark:hover:bg-[#6D28D9] text-white rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:scale-[1.02] transform transition-all cursor-pointer"
                   >
                     <FiDownload />
                     <span>Download PNG</span>
