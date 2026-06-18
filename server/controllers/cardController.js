@@ -71,13 +71,23 @@ export const memoryAnalytics = [
 // Generates Mock fallback data when Gemini API key is missing or calls fail
 const generateMockCard = (occasion, tone, recipient, sender, length, language) => {
   const isHindi = language.toLowerCase() === 'hindi';
+  const isTelugu = language.toLowerCase() === 'telugu';
   
   if (isHindi) {
     return {
       title: `${recipient} के लिए विशेष शुभकामना`,
-      content: `प्रिय ${recipient}, इस ${occasion} के पावन अवसर पर मेरी ओर से हार्दिक शुभकामनाएं। भगवान करे कि आपका यह दिन खुशियों से भरा हो और आपकी जिंदगी में हमेशा खुशहाली रहे। आपका दिन मंगलमय हो! शुभकामनाओं के साथ, ${sender}।`,
+      content: `प्रिय ${recipient}, इस ${occasion} के पाวน अवसर पर मेरी ओर से हार्दिक शुभकामनाएं। भगवान करे कि आपका यह दिन खुशियों से भरा हो और आपकी जिंदगी में हमेशा खुशहाली रहे। आपका दिन मंगलमय हो! शुभकामनाओं के साथ, ${sender}।`,
       caption: `${occasion} की हार्दिक शुभकामनाएं! ✨`,
       giftTag: `प्रिय ${recipient} के लिए, ${sender} की तरफ से।`
+    };
+  }
+
+  if (isTelugu) {
+    return {
+      title: `${recipient} కి ప్రత్యేక శుభాకాంక్షలు`,
+      content: `ప్రియమైన ${recipient}, ఈ ${occasion} పండగ సందర్భంగా నా హృదయపూర్వక శుభాకాంక్షలు. దేవుడు మీకు సంతోషాన్ని, ఆయురారోగ్యాలను ప్రసాదించాలని కోరుకుంటున్నాను. మీ జీవితం ఎల్లప్పుడూ ఆనందంగా సాగాలని ఆశిస్తున్నాను. శుభాకాంక్షలతో, ${sender}.`,
+      caption: `${occasion} శుభాకాంక్షలు! ✨`,
+      giftTag: `ప్రియమైన ${recipient} కి, ${sender} నుండి.`
     };
   }
 
@@ -159,7 +169,7 @@ Generate a personalized greeting card based on the following specifications:
 - Recipient Name: ${recipient}
 - Sender Name: ${sender}
 - Message Length: ${length} (Short = ~1-2 sentences, Medium = ~3-5 sentences, Long = ~6+ sentences)
-- Language: ${language} (Write the entire content, title, caption, and gift tag in the selected language. If language is Hindi, use Devnagari script)
+- Language: ${language} (Write the entire content, title, caption, and gift tag in the selected language. If language is Hindi, use Devnagari script; if Telugu, use Telugu script)
 
 You must output a raw, valid JSON object containing exactly the following keys, with no markdown tags or wrapper format:
 {

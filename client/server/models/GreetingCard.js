@@ -29,7 +29,7 @@ const greetingCardSchema = new mongoose.Schema(
     },
     language: {
       type: String,
-      enum: ['English', 'Hindi'],
+      enum: ['English', 'Hindi', 'Telugu'],
       default: 'English',
     },
     title: {

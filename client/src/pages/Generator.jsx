@@ -658,9 +658,9 @@ const Generator = () => {
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-[#150E35]/70 border border-slate-200/50 dark:border-purple-900/30 rounded-xl text-slate-800 dark:text-white focus:outline-none focus:border-purple-500 transition-colors text-sm font-medium"
                   >
-                    <option value="Short" className="dark:bg-[#120B2E]">Short (~2 sentences)</option>
-                    <option value="Medium" className="dark:bg-[#120B2E]">Medium (~4 sentences)</option>
-                    <option value="Long" className="dark:bg-[#120B2E]">Long (~6+ sentences)</option>
+                    <option value="Short" className="dark:bg-[#120B2E]">Short</option>
+                    <option value="Medium" className="dark:bg-[#120B2E]">Medium</option>
+                    <option value="Long" className="dark:bg-[#120B2E]">Long</option>
                   </select>
                 </div>
                 <div>
@@ -673,6 +673,7 @@ const Generator = () => {
                   >
                     <option value="English" className="dark:bg-[#120B2E]">English</option>
                     <option value="Hindi" className="dark:bg-[#120B2E]">Hindi (हिंदी)</option>
+                    <option value="Telugu" className="dark:bg-[#120B2E]">Telugu (తెలుగు)</option>
                   </select>
                 </div>
               </div>
