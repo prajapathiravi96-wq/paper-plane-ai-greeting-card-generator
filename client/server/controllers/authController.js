@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import { supabase, isSupabaseConfigured } from '../config/supabase.js';
 
 // Seeding standard in-memory users.
